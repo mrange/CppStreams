@@ -1,0 +1,624 @@
+// ----------------------------------------------------------------------------
+// Copyright 2015 Mårten Rånge
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ----------------------------------------------------------------------------
+#ifndef CPP_STREAMS__FUNCTIONAL_TESTS__INCLUDE_GUARD
+# define CPP_STREAMS__FUNCTIONAL_TESTS__INCLUDE_GUARD
+// ----------------------------------------------------------------------------
+# include "../cpp_streams/cpp_streams.hpp"
+
+# include <cstdint>
+# include <algorithm>
+# include <iostream>
+# include <iterator>
+# include <sstream>
+# include <string>
+// ----------------------------------------------------------------------------
+# define CPP_STREAMS__TEST()                  test_prelude (__FILE__, __LINE__, __FUNCTION__)
+# define CPP_STREAMS__ERROR(msg)              test_error (__FILE__, __LINE__, __FUNCTION__, msg)
+# define CPP_STREAMS__EQUAL(expected, actual) test_equal (__FILE__, __LINE__, __FUNCTION__, #expected, expected, #actual, actual)
+// ----------------------------------------------------------------------------
+// Functional test strategy:
+//  Test functionalitty with
+//    1. Empty list
+//    2. Non-empty list
+//    3. Simple and complex value types
+//    4. Avoid auto for 'actual' to catch type transformation errors
+//    6. Avoid auto && in lambda expressions passed to 'CppStreams' to catch type transformation errors
+// ----------------------------------------------------------------------------
+namespace functional_tests
+{
+  struct user
+  {
+    CPP_STREAMS__BODY (user);
+
+    user () = default;
+
+    bool operator == (user const & o) const
+    {
+      return
+            true
+        &&  id          == o.id
+        &&  first_name  == o.first_name
+        &&  last_name   == o.last_name
+        ;
+    }
+
+    std::uint64_t id        ;
+    std::string   first_name;
+    std::string   last_name ;
+  };
+
+  std::ostream & operator << (std::ostream & s, user const & v)
+  {
+    s
+      << "{user"
+      << ", id:"
+      << v.id
+      << ", first_name:'"
+      << v.first_name
+      << "', last_name:'"
+      << v.last_name
+      << "'}"
+      ;
+
+    return s;
+  }
+
+  template<typename TValueType>
+  std::ostream & operator << (std::ostream & s, std::vector<TValueType> const & vs)
+  {
+    s
+      << "[("
+      << vs.size ()
+      << ")"
+      ;
+
+      for (auto && v : vs )
+      {
+        s
+          << ", "
+          << v
+          ;
+      }
+
+    s
+      << "]"
+      ;
+
+    return s;
+  }
+
+  constexpr std::size_t operator "" _sz ( unsigned long long n )
+  {
+    return n;
+  }
+
+  std::size_t       errors_detected = 0;
+
+  std::vector<int>  empty_ints  {};
+  std::vector<int>  some_ints   {3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,};
+
+  user empty_user;
+
+  std::vector<user> empty_users {};
+  std::vector<user> some_users
+  {
+    {1001, "Bill"   , "Gates" },
+    {1002, "Melinda", "Gates" },
+    {1003, "Steve"  , "Jobs"  },
+  };
+
+  void test_error (char const * file_name, int line_no, char const * function_name, char const * message)
+  {
+    ++errors_detected;
+    std::cout
+      << "ERROR - Line "
+      << line_no
+      << " : "
+      << message
+      << std::endl
+      ;
+  }
+
+  template<typename TExpected, typename TActual>
+  bool test_equal (
+      char const *  file_name
+    , int           line_no
+    , char const *  function_name
+    , char const *  expected_name
+    , TExpected &&  expected
+    , char const *  actual_name
+    , TActual &&    actual
+    )
+  {
+    if (expected == actual)
+    {
+      return true;
+    }
+    else
+    {
+      std::ostringstream stream;
+
+      stream
+        << expected_name
+        << " ("
+        << expected
+        << ") == "
+        << actual_name
+        << " ("
+        << actual
+        << ")"
+        ;
+
+      auto message = stream.str ();
+
+      test_error (file_name, line_no, function_name, message.c_str ());
+
+      return false;
+    }
+  }
+
+  auto identity = [] (auto && v)
+  {
+    return std::forward<decltype (v)> (v);
+  };
+
+  auto map_id = [] (user const & v)
+  {
+    return v.id;
+  };
+
+  template<typename TContainer, typename TPredicate>
+  auto compute_sum (TContainer && container, TPredicate && predicate)
+  {
+    using value_type = decltype (predicate (container.front ()));
+
+    value_type sum {};
+
+    for (auto && v : container)
+    {
+      sum += predicate (std::forward<decltype (v)> (v));
+    }
+
+    return sum;
+  }
+
+  void test_prelude (char const * file_name, int line_no, char const * function_name)
+  {
+    std::cout
+      << "Running: "
+      << function_name
+      << std::endl
+      ;
+  }
+
+  void test__to_first_or_default ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      user expected = empty_user;
+      user actual   = from (empty_users) >> to_first_or_default ();
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      int expected  = some_ints.front ();
+      int actual    = from (some_ints) >> to_first_or_default ();
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+  }
+
+  void test__to_last_or_default ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      user expected   = empty_user;
+      user actual     = from (empty_users) >> to_last_or_default ();
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      int expected    = some_ints.back ();
+      int actual      = from (some_ints) >> to_last_or_default ();
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+  }
+
+  void test__to_sum ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      int expected  = 0;
+      int actual    = from (empty_ints) >> to_sum ();
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      int expected  = compute_sum (some_ints, identity);
+      int actual    = from (some_ints) >> to_sum ();
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+  }
+
+  void test__to_vector ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      std::vector<int> expected = empty_ints;
+      std::vector<int> actual   = from (empty_ints) >> to_vector ();
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<user> expected  = some_users;
+      std::vector<user> actual    = from (some_users) >> to_vector ();
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+  }
+
+  void test__to_iter ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      int expected  = 0;
+      int actual    = 0;
+          from (empty_ints)
+      >>  to_iter ([&actual] (int v) { actual += v; return true; })
+      ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::uint64_t expected  = 0;
+      std::uint64_t actual    = 0;
+          from (empty_users)
+      >>  to_iter ([&actual] (user const & v) { actual += v.id; return false; })
+      ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      int expected  = compute_sum (some_ints, identity);
+      int actual    = 0;
+          from (some_ints)
+      >>  to_iter ([&actual] (int v) { actual += v; return true; })
+      ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::uint64_t expected  = some_users.front ().id;
+      std::uint64_t actual    = 0;
+          from (some_users)
+      >>  to_iter ([&actual] (user const & v) { actual += v.id; return false; })
+      ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+  }
+
+  void test__to_fold ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    auto fold_int   = [] (int s, int v) { return s + v; };
+    auto fold_user  = [] (std::uint64_t s, user const & v) { return s + v.id; };
+
+    {
+      int expected  = 0;
+      int actual    =
+            from (empty_ints)
+        >>  to_fold (0, fold_int)
+      ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      int expected  = compute_sum (some_ints, identity);
+      int actual    =
+            from (some_ints)
+        >>  to_fold (0, fold_int)
+      ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::uint64_t expected  = compute_sum (some_users, map_id);
+      std::uint64_t actual    =
+            from (some_users)
+        >>  to_fold (0_sz, fold_user)
+      ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+  }
+
+  void test__filter ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    auto filter_int   = [] (int v) { return v % 2 == 0; };
+    auto filter_user  = [] (user const & v) { return v.last_name == "Gates"; };
+
+    auto apply_filter = [] (auto && filter, auto && vs)
+    {
+      using value_type = std::remove_reference_t<decltype (vs.front ())>;
+      std::vector<value_type> result;
+      result.reserve (vs.size ());
+      std::copy_if (
+          vs.begin ()
+        , vs.end ()
+        , std::back_inserter (result)
+        , filter
+        );
+      return result;
+    };
+
+    {
+      std::vector<int> expected {};
+      std::vector<int> actual   =
+            from (empty_ints)
+        >>  filter (filter_int)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<int> expected = apply_filter (filter_int, some_ints);
+      std::vector<int> actual   =
+            from (some_ints)
+        >>  filter (filter_int)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<user> expected  = apply_filter (filter_user, some_users);
+      std::vector<user> actual    =
+            from (some_users)
+        >>  filter (filter_user)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+  }
+
+  void test__map ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    auto map_int   = [] (int v) { return std::to_string (v); };
+    auto map_user  = map_id;
+
+    auto apply_map = [] (auto && map, auto && vs)
+    {
+      using value_type = std::remove_reference_t<decltype (map (vs.front ()))>;
+      std::vector<value_type> result;
+      result.reserve (vs.size ());
+      std::transform (
+          vs.begin ()
+        , vs.end ()
+        , std::back_inserter (result)
+        , map
+        );
+      return result;
+    };
+
+    {
+      std::vector<std::string> expected {};
+      std::vector<std::string> actual   =
+            from (empty_ints)
+        >>  map (map_int)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<std::string> expected = apply_map (map_int, some_ints);
+      std::vector<std::string> actual   =
+            from (some_ints)
+        >>  map (map_int)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<std::uint64_t> expected = apply_map (map_user, some_users);
+      std::vector<std::uint64_t> actual   =
+            from (some_users)
+        >>  map (map_user)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+  }
+
+  void test__reverse ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    auto apply_reverse = [] (auto && vs)
+    {
+      using value_type = std::remove_reference_t<decltype (vs.front ())>;
+      std::vector<value_type> result;
+      result.reserve (vs.size ());
+      std::reverse_copy (
+          vs.begin ()
+        , vs.end ()
+        , std::back_inserter (result)
+        );
+      return result;
+    };
+
+    {
+      std::vector<int> expected {};
+      std::vector<int> actual   =
+            from (empty_ints)
+        >>  reverse ()
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<int> expected = apply_reverse (some_ints);
+      std::vector<int> actual   =
+            from (some_ints)
+        >>  reverse ()
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<user> expected = apply_reverse (some_users);
+      std::vector<user> actual   =
+            from (some_users)
+        >>  reverse ()
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+  }
+
+
+  void test__example ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    std::vector<int> ints {3,1,4,1,5,9,2,6,5,4};
+
+    // Produce a sum of even ints (+1)
+    auto sum =
+          from (ints)
+      >>  filter ([] (auto && v) {return v % 2 == 0;})  // Keep only even numbers
+      >>  map ([] (auto && v) {return v + 1;})          // +1
+      >>  to_sum ()                                     // Compute sum
+      ;
+
+    std::cout << "SUM: " << sum << std::endl;
+  }
+
+  void test__basic ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    auto query =
+          from (some_ints)
+      >>  filter ([] (auto && v) {return v % 2 == 0;})
+      >>  map ([] (auto && v) {return v + 1;})
+//      >>  reverse ()
+//      >>  map ([] (auto && v) {return std::to_string (v);})
+      ;
+
+    std::cout << "SUM: " << (query >> to_sum ()) << std::endl;
+    std::cout << "FIRST: " << (query >> to_first_or_default ()) << std::endl;
+    std::cout << "LAST: " << (query >> to_last_or_default ()) << std::endl;
+  }
+
+  void test__mutating ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    auto copy = some_ints;
+
+        from (copy)
+    >>  filter ([] (auto && v) {return v % 2 == 0;})
+// TODO: Investigate how to test negative tests case like below
+//    >>  map ([] (auto && v) {return v + 1;})
+    >>  to_iter ([] (auto && v) { v += 1; return true; });
+
+    CPP_STREAMS__ERROR ("Yello");
+  }
+
+  void run_functional_tests ()
+  {
+    std::cout
+      << "Running functional tests..."
+      << std::endl
+      ;
+
+    test__to_first_or_default ();
+    test__to_last_or_default  ();
+    test__to_sum              ();
+    test__to_vector           ();
+    test__to_iter             ();
+    test__to_fold             ();
+    test__filter              ();
+    test__map                 ();
+    test__reverse             ();
+
+    test__example             ();
+    //test__basic ();
+    //test__mutating ();
+
+
+    if (errors_detected > 0)
+    {
+      std::cout
+        << "Detected "
+        << errors_detected
+        << " functional errors"
+        << std::endl
+        ;
+    }
+    else
+    {
+      std::cout
+        << "No functional errors detected"
+        << std::endl
+        ;
+    }
+  }
+}
+// ----------------------------------------------------------------------------
+#endif // CPP_STREAMS__FUNCTIONAL_TESTS__INCLUDE_GUARD
+// ----------------------------------------------------------------------------
