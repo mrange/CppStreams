@@ -362,6 +362,61 @@ namespace functional_tests
 
   }
 
+  void test__append ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      std::vector<int> expected {};
+      std::vector<int> actual   =
+            from (empty_ints)
+        >>  append (from (empty_ints))
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<user> expected = some_users;
+      std::vector<user> actual   =
+            from (some_users)
+        >>  append (from (empty_users))
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<int> expected = some_ints;
+      std::vector<int> actual   =
+            from (empty_ints)
+        >>  append (from (some_ints))
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      auto double_users = some_users;
+      double_users.reserve (double_users.size () * 2);
+      std::copy (
+          some_users.begin ()
+        , some_users.end ()
+        , std::back_inserter (double_users)
+        );
+      std::vector<user> expected = double_users;
+      std::vector<user> actual   =
+            from (some_users)
+        >>  append (from (some_users))
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+  }
+
   void test__filter ()
   {
     CPP_STREAMS__TEST ();
@@ -592,6 +647,7 @@ namespace functional_tests
     test__to_vector           ();
     test__to_iter             ();
     test__to_fold             ();
+    test__append              ();
     test__filter              ();
     test__map                 ();
     test__reverse             ();

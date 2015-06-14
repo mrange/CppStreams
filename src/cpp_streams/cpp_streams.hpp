@@ -97,6 +97,61 @@ namespace cpp_streams
       return source_adapter<TValueType, TSource> (std::forward<TSource> (source));
     }
 
+    template<typename T>
+    struct is_source_adapter
+    {
+      enum
+      {
+        value = false,
+      };
+    };
+
+    template<typename TValueType, typename TSource>
+    struct is_source_adapter<source_adapter<TValueType, TSource>>
+    {
+      enum
+      {
+        value = true,
+      };
+    };
+
+    // ------------------------------------------------------------------------
+
+    template<typename TOtherSource>
+    struct append_pipe
+    {
+      TOtherSource  other_source  ;
+
+      CPP_STREAMS__BODY (append_pipe);
+
+      static_assert (is_source_adapter<TOtherSource>::value, "TOtherSource must be a proper cpp_streams source");
+
+      explicit CPP_STREAMS__PRELUDE append_pipe (TOtherSource other_source)
+        : other_source (std::move (other_source))
+      {
+      }
+
+      template<typename TValueType, typename TSource>
+      CPP_STREAMS__PRELUDE auto consume (TSource && source) const
+      {
+        static_assert (std::is_same<TValueType, TOtherSource::value_type>::value, "TSource and TOtherSource must be a cpp_streams source of same value_type");
+
+        return adapt_source<TValueType> (
+          [this, other_source = other_source, source = std::forward<TSource> (source)] (auto && sink)
+          {
+            source ([sink] (auto && v)
+            {
+              return sink (std::forward<decltype(v)> (v));
+            });
+
+            other_source.source ([sink = std::forward<decltype(sink)> (sink)] (auto && v)
+            {
+              return sink (std::forward<decltype(v)> (v));
+            });
+          });
+      }
+    };
+
     // ------------------------------------------------------------------------
 
     template<typename TPredicate>
@@ -384,6 +439,14 @@ namespace cpp_streams
   CPP_STREAMS__PRELUDE auto from (TContainer & container)
   {
     return from_iterators (container.begin (), container.end ());
+  }
+
+  // --------------------------------------------------------------------------
+
+  template<typename TOtherSource>
+  CPP_STREAMS__PRELUDE auto append (TOtherSource other_source)
+  {
+    return detail::append_pipe<TOtherSource> (std::move (other_source));
   }
 
   // --------------------------------------------------------------------------

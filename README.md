@@ -77,7 +77,7 @@ The motivation for CppStreams are:
 |      | Done    | filter                  | Filter elements in pipeline using filter function  |
 |      | Done    | map                     | Maps elements in pipeline using map function       |
 |      | Done    | reverse                 | Reverses elements in pipeline                      |
-|    1 | Planned | append                  | Appends two pipelines                              |
+|      | Done    | append                  | Appends two pipelines                              |
 |    1 | Planned | collect                 | Collects sub elements in pipeline                  |
 |    1 | Planned | mapi                    | Maps elements in pipeline using mapi function      |
 |    1 | Planned | order_by                | Orders elements in pipeline using order function   |
