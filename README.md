@@ -59,46 +59,76 @@ The motivation for CppStreams are:
 
 ### Source operators
 
-| Status  | Source operator         | Comment                                            |
-| --------|-------------------------|----------------------------------------------------|
-| Done    | from                    | Creates a source from a STL container              |
-| Done    | from_iterators          | Creates a source from a pair of iterators          |
-| Planned | from_array              | Creates a source from a C-style array              |
+| Prio | Status  | Source operator         | Comment                                            |
+|-----:| --------|-------------------------|----------------------------------------------------|
+|      | Done    | from                    | Creates a source from a STL container              |
+|      | Done    | from_iterators          | Creates a source from a pair of iterators          |
+|    1 | Planned | from_array              | Creates a source from a C-style array              |
+|    1 | Planned | from_empty              | Creates an empty source                            |
+|    1 | Planned | from_repeat             | Creates an source from a value and repeat count    |
+|    2 | Planned | from_singleton          | Creates an source from a value                     |
+|    2 | Planned | from_unfold             | Creates an source from an unfold function          |
+|    2 | Planned | from_generator          | Creates an source from a generator function        |
 
 ### Pipe operators
 
-| Status  | Pipe operator           | Comment                                            |
-| --------|-------------------------|----------------------------------------------------|
-| Done    | filter                  | Filter elements in pipeline using filter function  |
-| Done    | map                     | Maps elements in pipeline using map function       |
-| Done    | reverse                 | Reverses elements in pipeline                      |
-| Planned | order_by                | Orders elements in pipeline using order function   |
-| Planned | then_by                 | Orders elements in pipeline using order function   |
-| Planned | union_with              | Union of two pipelines                             |
-| Planned | intersect_with          | Intersection of two pipelines                      |
-| Planned | expect_with             | Disjunction of two pipelines                       |
-| Planned | join_with               | Joins two pipelines                                |
+| Prio | Status  | Pipe operator           | Comment                                            |
+|-----:| --------|-------------------------|----------------------------------------------------|
+|      | Done    | filter                  | Filter elements in pipeline using filter function  |
+|      | Done    | map                     | Maps elements in pipeline using map function       |
+|      | Done    | reverse                 | Reverses elements in pipeline                      |
+|    1 | Planned | append                  | Appends two pipelines                              |
+|    2 | Planned | choose                  | Chooses elements in pipeline                       |
+|    1 | Planned | collect                 | Collects sub elements in pipeline                  |
+|    3 | Planned | windowed                | Splits elements in pipeline in chunks              |
+|    3 | Planned | compare_with            | Compares two pipelines                             |
+|    2 | Planned | concat                  | Concats a pipeline of pipelines                    |
+|    2 | Planned | distinct_by             | Unique elements in pipeline using select function  |
+|    1 | Planned | mapi                    | Maps elements in pipeline using mapi function      |
+|    1 | Planned | order_by                | Orders elements in pipeline using order function   |
+|    1 | Planned | then_by                 | Orders elements in pipeline using order function   |
+|    3 | Planned | pairwise                | Makes pair of elements in pipeline                 |
+|    2 | Planned | partition               | Partitions elements in pipeline in two heaps       |
+|    3 | Planned | permute                 | Permutes elements in pipeline using permutes func  |
+|    2 | Planned | reduce                  | Reduces elements in pipeline using reduce function |
+|    2 | Planned | union_with              | Union of two pipelines                             |
+|    2 | Planned | intersect_with          | Intersection of two pipelines                      |
+|    2 | Planned | expect_with             | Disjunction of two pipelines                       |
+|    3 | Planned | join_with               | Joins two pipelines                                |
+|    1 | Planned | skip                    | Skips n elements in pipeline                       |
+|    1 | Planned | skip_while              | Skips while func is true for elements in pipeline  |
+|    1 | Planned | take                    | Takes n elements in pipeline                       |
+|    1 | Planned | take_while              | Takes while func is true for elements in pipeline  |
 
 ### Sink operators
 
-| Status  | Sink operator           | Comment                                            |
-| --------|-------------------------|----------------------------------------------------|
-| Done    | to_first_or_default     | Returns the first element of pipeline or default   |
-| Done    | to_last_or_default      | Returns the last element of pipeline or default    |
-| Done    | to_sum                  | Returns sum of elements in pipeline                |
-| Done    | to_vector               | Returns vector of elements in pipeline             |
-| Done    | to_iter                 | Applies iteration function to elements in pipeline |
-| Done    | to_fold                 | Applies fold function to elements in pipeline      |
-| Planned | to_length               | Returns length of elements in pipeline             |
-| Planned | to_map                  | Returns map of elements in pipeline                |
-| Planned | to_set                  | Returns set of elements in pipeline                |
-| Planned | to_lookup               | Returns lookup of elements in pipeline             |
+| Prio | Status  | Sink operator           | Comment                                            |
+|-----:| --------|-------------------------|----------------------------------------------------|
+|      | Done    | to_first_or_default     | Returns the first element of pipeline or default   |
+|      | Done    | to_last_or_default      | Returns the last element of pipeline or default    |
+|      | Done    | to_sum                  | Returns sum of elements in pipeline                |
+|      | Done    | to_vector               | Returns vector of elements in pipeline             |
+|      | Done    | to_iter                 | Applies iteration function to elements in pipeline |
+|      | Done    | to_fold                 | Applies fold function to elements in pipeline      |
+|    2 | Planned | to_average              | Returns average of elements in pipeline            |
+|    1 | Planned | to_any                  | True if pipeline has any element matching predicate|
+|    1 | Planned | to_all                  | True if all pipeline element matches predicate     |
+|    2 | Planned | to_first                | Returns the first element of pipeline or empty     |
+|    2 | Planend | to_last                 | Returns the last element of pipeline or empty      |
+|    1 | Planned | to_length               | Returns length of elements in pipeline             |
+|    1 | Planned | to_map                  | Returns map of elements in pipeline                |
+|    1 | Planned | to_max                  | Returns max of elements in pipeline                |
+|    1 | Planned | to_min                  | Returns min of elements in pipeline                |
+|    1 | Planned | to_set                  | Returns set of elements in pipeline                |
+|    3 | Planned | to_scan                 | Applies scan function to elements in pipeline      |
+|    2 | Planned | to_split_at             | Splits a pipeline at index n                       |
+|    3 | Planned | to_split_into           | Splits a pipeline into at most n chunks            |
+|    2 | Planned | to_lookup               | Returns lookup of elements in pipeline             |
 
 # TODO
 
 NEXT: 008
 
-1. 000 - Complete status of operators
 2. 001 - general: Capture by RValue reference as implied here: [capture-by-universal-reference](http://stackoverflow.com/questions/21238463/capture-by-universal-reference)
 3. 002 - iteration_sink: Check return type, if void return false
 4. 003 - from: Should capture the container by value if RValue reference
@@ -107,3 +137,6 @@ NEXT: 008
 7. 006 - performance: Add performance tests
 8. 007 - coverage: Add code coverage tests
 
+## Done
+
+1. 000 - Complete status of operators
