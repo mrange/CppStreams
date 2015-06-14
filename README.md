@@ -78,27 +78,27 @@ The motivation for CppStreams are:
 |      | Done    | map                     | Maps elements in pipeline using map function       |
 |      | Done    | reverse                 | Reverses elements in pipeline                      |
 |    1 | Planned | append                  | Appends two pipelines                              |
-|    2 | Planned | choose                  | Chooses elements in pipeline                       |
 |    1 | Planned | collect                 | Collects sub elements in pipeline                  |
-|    3 | Planned | windowed                | Splits elements in pipeline in chunks              |
-|    3 | Planned | compare_with            | Compares two pipelines                             |
-|    2 | Planned | concat                  | Concats a pipeline of pipelines                    |
-|    2 | Planned | distinct_by             | Unique elements in pipeline using select function  |
 |    1 | Planned | mapi                    | Maps elements in pipeline using mapi function      |
 |    1 | Planned | order_by                | Orders elements in pipeline using order function   |
 |    1 | Planned | then_by                 | Orders elements in pipeline using order function   |
-|    3 | Planned | pairwise                | Makes pair of elements in pipeline                 |
-|    2 | Planned | partition               | Partitions elements in pipeline in two heaps       |
-|    3 | Planned | permute                 | Permutes elements in pipeline using permutes func  |
-|    2 | Planned | reduce                  | Reduces elements in pipeline using reduce function |
-|    2 | Planned | union_with              | Union of two pipelines                             |
-|    2 | Planned | intersect_with          | Intersection of two pipelines                      |
-|    2 | Planned | expect_with             | Disjunction of two pipelines                       |
-|    3 | Planned | join_with               | Joins two pipelines                                |
 |    1 | Planned | skip                    | Skips n elements in pipeline                       |
 |    1 | Planned | skip_while              | Skips while func is true for elements in pipeline  |
 |    1 | Planned | take                    | Takes n elements in pipeline                       |
 |    1 | Planned | take_while              | Takes while func is true for elements in pipeline  |
+|    2 | Planned | choose                  | Chooses elements in pipeline                       |
+|    2 | Planned | concat                  | Concats a pipeline of pipelines                    |
+|    2 | Planned | distinct_by             | Unique elements in pipeline using select function  |
+|    2 | Planned | partition               | Partitions elements in pipeline in two heaps       |
+|    2 | Planned | reduce                  | Reduces elements in pipeline using reduce function |
+|    2 | Planned | union_with              | Union of two pipelines                             |
+|    2 | Planned | intersect_with          | Intersection of two pipelines                      |
+|    2 | Planned | expect_with             | Disjunction of two pipelines                       |
+|    3 | Planned | windowed                | Splits elements in pipeline in chunks              |
+|    3 | Planned | compare_with            | Compares two pipelines                             |
+|    3 | Planned | pairwise                | Makes pair of elements in pipeline                 |
+|    3 | Planned | permute                 | Permutes elements in pipeline using permutes func  |
+|    3 | Planned | join_with               | Joins two pipelines                                |
 
 ### Sink operators
 
@@ -110,32 +110,32 @@ The motivation for CppStreams are:
 |      | Done    | to_vector               | Returns vector of elements in pipeline             |
 |      | Done    | to_iter                 | Applies iteration function to elements in pipeline |
 |      | Done    | to_fold                 | Applies fold function to elements in pipeline      |
-|    2 | Planned | to_average              | Returns average of elements in pipeline            |
 |    1 | Planned | to_any                  | True if pipeline has any element matching predicate|
 |    1 | Planned | to_all                  | True if all pipeline element matches predicate     |
-|    2 | Planned | to_first                | Returns the first element of pipeline or empty     |
-|    2 | Planend | to_last                 | Returns the last element of pipeline or empty      |
 |    1 | Planned | to_length               | Returns length of elements in pipeline             |
 |    1 | Planned | to_map                  | Returns map of elements in pipeline                |
 |    1 | Planned | to_max                  | Returns max of elements in pipeline                |
 |    1 | Planned | to_min                  | Returns min of elements in pipeline                |
 |    1 | Planned | to_set                  | Returns set of elements in pipeline                |
-|    3 | Planned | to_scan                 | Applies scan function to elements in pipeline      |
+|    2 | Planned | to_average              | Returns average of elements in pipeline            |
+|    2 | Planned | to_first                | Returns the first element of pipeline or empty     |
 |    2 | Planned | to_split_at             | Splits a pipeline at index n                       |
-|    3 | Planned | to_split_into           | Splits a pipeline into at most n chunks            |
+|    2 | Planend | to_last                 | Returns the last element of pipeline or empty      |
 |    2 | Planned | to_lookup               | Returns lookup of elements in pipeline             |
+|    3 | Planned | to_scan                 | Applies scan function to elements in pipeline      |
+|    3 | Planned | to_split_into           | Splits a pipeline into at most n chunks            |
 
 # TODO
 
 NEXT: 008
 
+7. 006 - performance: Add performance tests
+8. 007 - coverage: Add code coverage tests
 2. 001 - general: Capture by RValue reference as implied here: [capture-by-universal-reference](http://stackoverflow.com/questions/21238463/capture-by-universal-reference)
 3. 002 - iteration_sink: Check return type, if void return false
 4. 003 - from: Should capture the container by value if RValue reference
 5. 004 - test: Figure out how to test negative type test cases (these will trigger compilation errors).
 6. 005 - general: Not happy with the requirement to capture this in lambdas, find alternative
-7. 006 - performance: Add performance tests
-8. 007 - coverage: Add code coverage tests
 
 ## Done
 
