@@ -78,8 +78,8 @@ namespace cpp_streams
       {
       }
 
-      explicit CPP_STREAMS__PRELUDE source_adapter (TSource && source) noexcept
-        : source (std::forward<TSource> (source))
+      explicit CPP_STREAMS__PRELUDE source_adapter (TSource && source)
+        : source (std::move (source))
       {
       }
 
@@ -139,12 +139,12 @@ namespace cpp_streams
         return adapt_source<TValueType> (
           [this, other_source = other_source, source = std::forward<TSource> (source)] (auto && sink)
           {
-            source ([sink] (auto && v)
+            source ([&sink] (auto && v)
             {
               return sink (std::forward<decltype(v)> (v));
             });
 
-            other_source.source ([sink = std::forward<decltype(sink)> (sink)] (auto && v)
+            other_source.source ([&sink] (auto && v)
             {
               return sink (std::forward<decltype(v)> (v));
             });
@@ -172,7 +172,7 @@ namespace cpp_streams
         return adapt_source<TValueType> (
           [this, predicate = predicate, source = std::forward<TSource> (source)] (auto && sink)
           {
-            source ([predicate, sink = std::forward<decltype(sink)> (sink)] (auto && v)
+            source ([&predicate, &sink] (auto && v)
             {
               if (predicate (v))
               {
@@ -212,7 +212,7 @@ namespace cpp_streams
         return adapt_source<value_type> (
           [this, predicate = predicate, source = std::forward<TSource> (source)] (auto && sink)
           {
-            source ([predicate, sink = std::forward<decltype(sink)> (sink)] (auto && v)
+            source ([&predicate, &sink (sink)] (auto && v)
             {
               return sink (predicate (std::forward<decltype(v)> (v)));
             });
@@ -253,6 +253,87 @@ namespace cpp_streams
             auto iter = result.size ();
             while (iter != 0 && sink (std::move (result[--iter])))
               ;
+          });
+      }
+    };
+
+    // ------------------------------------------------------------------------
+
+    template<typename TPredicate>
+    struct skip_while_pipe
+    {
+      TPredicate predicate;
+
+      CPP_STREAMS__BODY (skip_while_pipe);
+
+      explicit CPP_STREAMS__PRELUDE skip_while_pipe (TPredicate predicate)
+        : predicate (std::move (predicate))
+      {
+      }
+
+      template<typename TValueType, typename TSource>
+      CPP_STREAMS__PRELUDE auto consume (TSource && source) const
+      {
+        using value_type = strip_type_t<TValueType>;
+
+        return adapt_source<value_type> (
+          [this, predicate = predicate, source = std::forward<TSource> (source)] (auto && sink)
+          {
+            auto do_skip = true;
+
+            source ([&do_skip, &predicate, &sink] (auto && v)
+            {
+              if (!do_skip)
+              {
+                return sink (std::forward<decltype(v)> (v));
+              }
+              if (predicate (v))
+              {
+                return true;
+              }
+              else
+              {
+                do_skip = false;
+                return sink (std::forward<decltype(v)> (v));
+              }
+            });
+          });
+      }
+    };
+
+    // ------------------------------------------------------------------------
+
+    template<typename TPredicate>
+    struct take_while_pipe
+    {
+      TPredicate predicate;
+
+      CPP_STREAMS__BODY (take_while_pipe);
+
+      explicit CPP_STREAMS__PRELUDE take_while_pipe (TPredicate predicate)
+        : predicate (std::move (predicate))
+      {
+      }
+
+      template<typename TValueType, typename TSource>
+      CPP_STREAMS__PRELUDE auto consume (TSource && source) const
+      {
+        using value_type = strip_type_t<TValueType>;
+
+        return adapt_source<value_type> (
+          [this, predicate = predicate, source = std::forward<TSource> (source)] (auto && sink)
+          {
+            source ([&predicate, &sink] (auto && v)
+            {
+              if (predicate (v))
+              {
+                return sink (std::forward<decltype(v)> (v));
+              }
+              else
+              {
+                return false;
+              }
+            });
           });
       }
     };
@@ -305,7 +386,7 @@ namespace cpp_streams
         auto state = initial;
 
         source (
-          [folder = folder, &state] (auto && v)
+          [this, &state] (auto && v)
           {
             state = folder (std::move (state), std::forward<decltype (v)> (v));
             return true;
@@ -513,16 +594,32 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
-  CPP_STREAMS__PRELUDE auto reverse (std::size_t reserve = 16) noexcept
+  CPP_STREAMS__PRELUDE auto reverse (std::size_t reserve = 16)
   {
     return detail::reverse_pipe (reserve);
+  }
+
+  // --------------------------------------------------------------------------
+
+  template<typename TPredicate>
+  CPP_STREAMS__PRELUDE auto skip_while (TPredicate predicate)
+  {
+    return detail::skip_while_pipe<TPredicate> (std::move (predicate));
+  }
+
+  // --------------------------------------------------------------------------
+
+  template<typename TPredicate>
+  CPP_STREAMS__PRELUDE auto take_while (TPredicate predicate)
+  {
+    return detail::take_while_pipe<TPredicate> (std::move (predicate));
   }
 
   // --------------------------------------------------------------------------
   // Sinks
   // --------------------------------------------------------------------------
 
-  CPP_STREAMS__PRELUDE auto to_first_or_default () noexcept
+  CPP_STREAMS__PRELUDE auto to_first_or_default ()
   {
     return detail::first_or_default_sink ();
   }
@@ -530,7 +627,7 @@ namespace cpp_streams
   // --------------------------------------------------------------------------
 
   template<typename TIteration>
-  CPP_STREAMS__PRELUDE auto to_iter (TIteration iteration) noexcept
+  CPP_STREAMS__PRELUDE auto to_iter (TIteration iteration)
   {
     return detail::iteration_sink<TIteration> (std::move (iteration));
   }
@@ -538,28 +635,28 @@ namespace cpp_streams
   // --------------------------------------------------------------------------
 
   template<typename TState, typename TFolder>
-  CPP_STREAMS__PRELUDE auto to_fold (TState initial, TFolder folder) noexcept
+  CPP_STREAMS__PRELUDE auto to_fold (TState initial, TFolder folder)
   {
     return detail::fold_sink<TFolder, TState> (std::move (folder), std::move (initial));
   }
 
   // --------------------------------------------------------------------------
 
-  CPP_STREAMS__PRELUDE auto to_last_or_default () noexcept
+  CPP_STREAMS__PRELUDE auto to_last_or_default ()
   {
     return detail::last_or_default_sink ();
   }
 
   // --------------------------------------------------------------------------
 
-  CPP_STREAMS__PRELUDE auto to_sum () noexcept
+  CPP_STREAMS__PRELUDE auto to_sum ()
   {
     return detail::sum_sink ();
   }
 
   // --------------------------------------------------------------------------
 
-  CPP_STREAMS__PRELUDE auto to_vector () noexcept
+  CPP_STREAMS__PRELUDE auto to_vector ()
   {
     return detail::vector_sink ();
   }

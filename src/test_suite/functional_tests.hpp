@@ -654,6 +654,101 @@ namespace functional_tests
 
   }
 
+  void test__skip_while ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      std::vector<int>  expected = {};
+      std::vector<int>  actual   =
+            from (some_ints)
+        >>  skip_while ([] (auto && v) { return true; })
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<int>  expected {};
+      std::vector<int>  actual   =
+            from (empty_ints)
+        >>  skip_while ([] (auto && v) { return false; })
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<user> expected = some_users;
+      std::vector<user> actual   =
+            from (some_users)
+        >>  skip_while ([] (auto && v) { return false; })
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<int>  expected = {9, 2, 6, 5, 3, 5, 8, 9, 7, 9};
+      std::vector<int>  actual   =
+            from (some_ints)
+        >>  skip_while ([] (auto && v) { return v < 9; })
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+  }
+
+  void test__take_while ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      std::vector<int>  expected = {};
+      std::vector<int>  actual   =
+            from (some_ints)
+        >>  take_while ([] (auto && v) { return false; })
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<int>  expected {};
+      std::vector<int>  actual   =
+            from (empty_ints)
+        >>  take_while ([] (auto && v) { return true; })
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<user> expected = some_users;
+      std::vector<user> actual   =
+            from (some_users)
+        >>  take_while ([] (auto && v) { return true; })
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<int>  expected = {3,1,4,1};
+      std::vector<int>  actual   =
+            from (some_ints)
+        >>  take_while ([] (auto && v) { return v < 5; })
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+  }
 
   void test__example ()
   {
@@ -726,6 +821,8 @@ namespace functional_tests
     test__filter              ();
     test__map                 ();
     test__reverse             ();
+    test__skip_while          ();
+    test__take_while          ();
 
     test__to_first_or_default ();
     test__to_last_or_default  ();

@@ -78,14 +78,14 @@ The motivation for CppStreams are:
 |      | Done    | map                     | Maps elements in pipeline using map function       |
 |      | Done    | reverse                 | Reverses elements in pipeline                      |
 |      | Done    | append                  | Appends two pipelines                              |
+|      | Done    | skip_while              | Skips while func is true for elements in pipeline  |
+|      | Done    | take_while              | Takes while func is true for elements in pipeline  |
 |    1 | Planned | collect                 | Collects sub elements in pipeline                  |
 |    1 | Planned | mapi                    | Maps elements in pipeline using mapi function      |
 |    1 | Planned | order_by                | Orders elements in pipeline using order function   |
 |    1 | Planned | then_by                 | Orders elements in pipeline using order function   |
 |    1 | Planned | skip                    | Skips n elements in pipeline                       |
-|    1 | Planned | skip_while              | Skips while func is true for elements in pipeline  |
 |    1 | Planned | take                    | Takes n elements in pipeline                       |
-|    1 | Planned | take_while              | Takes while func is true for elements in pipeline  |
 |    2 | Planned | choose                  | Chooses elements in pipeline                       |
 |    2 | Planned | concat                  | Concats a pipeline of pipelines                    |
 |    2 | Planned | distinct_by             | Unique elements in pipeline using select function  |
