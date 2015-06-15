@@ -18,6 +18,7 @@
 // ----------------------------------------------------------------------------
 # include "../cpp_streams/cpp_streams.hpp"
 
+# include <chrono>
 # include <cstdint>
 # include <algorithm>
 # include <iostream>
@@ -119,9 +120,9 @@ namespace functional_tests
     return s;
   }
 
-  constexpr std::size_t operator "" _sz ( unsigned long long n )
+  constexpr std::size_t operator "" _sz (unsigned long long n)
   {
-    return n;
+    return static_cast<std::size_t> (n);
   }
 
   std::size_t       errors_detected = 0;
@@ -455,7 +456,7 @@ namespace functional_tests
       std::uint64_t expected  = compute_sum (some_users, map_id);
       std::uint64_t actual    =
             from (some_users)
-        >>  to_fold (0_sz, fold_user)
+        >>  to_fold (0ULL, fold_user)
       ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -1024,6 +1025,97 @@ namespace functional_tests
         << std::endl
         ;
     }
+  }
+
+  template<typename TPredicate>
+  auto time_it (std::size_t count, TPredicate && predicate)
+  {
+    auto then = std::chrono::high_resolution_clock::now ();
+
+    for (auto iter = 0U; iter < count; ++iter)
+    {
+      predicate ();
+    }
+
+    auto now = std::chrono::high_resolution_clock::now ();
+
+    auto diff = now - then;
+
+    return std::chrono::duration_cast<std::chrono::milliseconds> (diff);
+  }
+
+  __declspec(noinline) auto create_vector (int inner)
+  {
+    std::vector<int> ints;
+    ints.reserve (inner);
+
+    for (auto iter = 0; iter < inner; ++iter)
+    {
+      ints.push_back (iter);
+    }
+
+    return ints;
+  }
+
+  void performance__simple_pipe_line (int outer, int inner)
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    auto ints = create_vector (inner);
+
+    {
+      auto cs_func = [] (auto && vs)
+      {
+        return
+              from (vs)
+          >>  filter ([] (auto && v) {return v % 2 == 0;})
+          >>  map ([] (auto && v) {return v + 1;})
+          >>  to_sum ()
+          ;
+      };
+
+      std::cout << "cs_sum: " << cs_func (ints) << std::endl;
+
+      auto cs_time = time_it (outer, [&] () { cs_func (ints); });
+
+      std::cout << "cs_time: " << cs_time.count () << " ms" << std::endl;
+    }
+
+    {
+      auto classic_func = [] (auto && vs)
+      {
+        auto sum = 0;
+
+        for (auto && v : vs)
+        {
+          if (v % 2 == 0)
+          {
+            sum += (v + 1);
+          }
+        }
+
+        return sum;
+      };
+
+      std::cout << "classic_sum: " << classic_func (ints) << std::endl;
+
+      auto classic_time = time_it (outer, [&] () { classic_func (ints); });
+
+      std::cout << "classic_time: " << classic_time.count () << " ms" << std::endl;
+    }
+  }
+
+  void run_performance_tests ()
+  {
+    std::cout
+      << "Running performance tests..."
+      << std::endl
+      ;
+
+    performance__simple_pipe_line     (100000, 10000);
+
   }
 }
 // ----------------------------------------------------------------------------
