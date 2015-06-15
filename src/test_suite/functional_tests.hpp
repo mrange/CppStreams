@@ -523,6 +523,45 @@ namespace functional_tests
 
     using namespace cpp_streams;
 
+    auto collect_simple   = [] (user const & u) { return from (u.lottery_numbers); };
+    auto collect_advanced = [] (user const & u) { return from (u.lottery_numbers) >> map (map_tostring); };
+
+    {
+      std::vector<int>  expected  {};
+      std::vector<int>  actual    =
+            from (empty_users)
+        >>  collect (collect_simple)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<int>  expected  = some_users[0].lottery_numbers;
+      std::vector<int>  actual    =
+            from_singleton (some_users[0])
+        >>  collect (collect_simple)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<std::string>  expected  =
+            from (some_users[0].lottery_numbers)
+        >>  map (map_tostring)
+        >> to_vector ()
+        ;
+      std::vector<std::string>  actual    =
+            from_singleton (some_users[0])
+        >>  collect (collect_advanced)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    // These tests fails in VS2015 RC
+#ifndef _MSC_VER
     auto apply_collect = [] (auto && collect, auto && vs)
     {
       using source_type = detail::strip_type_t<decltype (collect (vs.front ()))>;
@@ -540,19 +579,6 @@ namespace functional_tests
       }
       return result;
     };
-
-    auto collect_simple   = [] (user const & u) { return from (u.lottery_numbers); };
-    auto collect_advanced = [] (user const & u) { return from (u.lottery_numbers) >> map (map_tostring); };
-
-    {
-      std::vector<int>  expected  {};
-      std::vector<int>  actual    =
-            from (empty_users)
-        >>  collect (collect_simple)
-        >>  to_vector ()
-        ;
-      CPP_STREAMS__EQUAL (expected, actual);
-    }
 
     {
       std::vector<int>  expected  = apply_collect (collect_simple, some_users);
@@ -573,6 +599,7 @@ namespace functional_tests
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
+#endif
 
   }
 
