@@ -285,6 +285,63 @@ namespace cpp_streams
 
     // ------------------------------------------------------------------------
 
+    template<typename TFolder, typename TState>
+    struct fold_sink
+    {
+      TFolder folder  ;
+      TState  initial ;
+
+      CPP_STREAMS__BODY (fold_sink);
+
+      fold_sink (TFolder folder, TState initial)
+        : folder  (std::move (folder))
+        , initial (std::move (initial))
+      {
+      }
+
+      template<typename TValueType, typename TSource>
+      CPP_STREAMS__SINK auto consume (TSource && source) const
+      {
+        auto state = initial;
+
+        source (
+          [folder = folder, &state] (auto && v)
+          {
+            state = folder (std::move (state), std::forward<decltype (v)> (v));
+            return true;
+          });
+
+        return state;
+      }
+    };
+
+    // ------------------------------------------------------------------------
+
+    template<typename TIteration>
+    struct iteration_sink
+    {
+      TIteration iteration;
+
+      CPP_STREAMS__BODY (iteration_sink);
+
+      explicit CPP_STREAMS__PRELUDE iteration_sink (TIteration iteration)
+        : iteration (std::move (iteration))
+      {
+      }
+
+      template<typename TValueType, typename TSource>
+      CPP_STREAMS__SINK void consume (TSource && source) const
+      {
+        source (
+          [iteration = iteration] (auto && v)
+          {
+            return iteration (v);
+          });
+      }
+    };
+
+    // ------------------------------------------------------------------------
+
     struct last_or_default_sink
     {
       CPP_STREAMS__BODY (last_or_default_sink);
@@ -363,61 +420,6 @@ namespace cpp_streams
 
     // ------------------------------------------------------------------------
 
-    template<typename TIteration>
-    struct iteration_sink
-    {
-      TIteration iteration;
-
-      CPP_STREAMS__BODY (iteration_sink);
-
-      explicit CPP_STREAMS__PRELUDE iteration_sink (TIteration iteration)
-        : iteration (std::move (iteration))
-      {
-      }
-
-      template<typename TValueType, typename TSource>
-      CPP_STREAMS__SINK void consume (TSource && source) const
-      {
-        source (
-          [iteration = iteration] (auto && v)
-          {
-            return iteration (v);
-          });
-      }
-    };
-
-    // ------------------------------------------------------------------------
-
-    template<typename TFolder, typename TState>
-    struct fold_sink
-    {
-      TFolder folder  ;
-      TState  initial ;
-
-      CPP_STREAMS__BODY (fold_sink);
-
-      fold_sink (TFolder folder, TState initial)
-        : folder  (std::move (folder))
-        , initial (std::move (initial))
-      {
-      }
-
-      template<typename TValueType, typename TSource>
-      CPP_STREAMS__SINK auto consume (TSource && source) const
-      {
-        auto state = initial;
-
-        source (
-          [folder = folder, &state] (auto && v)
-          {
-            state = folder (std::move (state), std::forward<decltype (v)> (v));
-            return true;
-          });
-
-        return state;
-      }
-    };
-
   }
 
   // --------------------------------------------------------------------------
@@ -434,6 +436,8 @@ namespace cpp_streams
   }
 
   // --------------------------------------------------------------------------
+  // Sources
+  // --------------------------------------------------------------------------
 
   template<typename TContainer>
   CPP_STREAMS__PRELUDE auto from (TContainer & container)
@@ -447,6 +451,17 @@ namespace cpp_streams
   CPP_STREAMS__PRELUDE auto from_array (TArray & arr)
   {
     return from_iterators (arr, arr + std::extent<TArray, 0>::value);
+  }
+
+  // --------------------------------------------------------------------------
+
+  template<typename TValue>
+  CPP_STREAMS__PRELUDE auto from_empty ()
+  {
+    return detail::adapt_source<TValue> (
+      [] (auto && sink)
+      {
+      });
   }
 
   // --------------------------------------------------------------------------
@@ -471,16 +486,7 @@ namespace cpp_streams
   }
 
   // --------------------------------------------------------------------------
-
-  template<typename TValue>
-  CPP_STREAMS__PRELUDE auto from_empty ()
-  {
-    return detail::adapt_source<TValue> (
-      [] (auto && sink)
-      {
-      });
-  }
-
+  // Pipes
   // --------------------------------------------------------------------------
 
   template<typename TOtherSource>
@@ -513,10 +519,28 @@ namespace cpp_streams
   }
 
   // --------------------------------------------------------------------------
+  // Sinks
+  // --------------------------------------------------------------------------
 
   CPP_STREAMS__PRELUDE auto to_first_or_default () noexcept
   {
     return detail::first_or_default_sink ();
+  }
+
+  // --------------------------------------------------------------------------
+
+  template<typename TIteration>
+  CPP_STREAMS__PRELUDE auto to_iter (TIteration iteration) noexcept
+  {
+    return detail::iteration_sink<TIteration> (std::move (iteration));
+  }
+
+  // --------------------------------------------------------------------------
+
+  template<typename TState, typename TFolder>
+  CPP_STREAMS__PRELUDE auto to_fold (TState initial, TFolder folder) noexcept
+  {
+    return detail::fold_sink<TFolder, TState> (std::move (folder), std::move (initial));
   }
 
   // --------------------------------------------------------------------------
@@ -538,22 +562,6 @@ namespace cpp_streams
   CPP_STREAMS__PRELUDE auto to_vector () noexcept
   {
     return detail::vector_sink ();
-  }
-
-  // --------------------------------------------------------------------------
-
-  template<typename TIteration>
-  CPP_STREAMS__PRELUDE auto to_iter (TIteration iteration) noexcept
-  {
-    return detail::iteration_sink<TIteration> (std::move (iteration));
-  }
-
-  // --------------------------------------------------------------------------
-
-  template<typename TState, typename TFolder>
-  CPP_STREAMS__PRELUDE auto to_fold (TState initial, TFolder folder) noexcept
-  {
-    return detail::fold_sink<TFolder, TState> (std::move (folder), std::move (initial));
   }
 
   // --------------------------------------------------------------------------
