@@ -63,10 +63,10 @@ The motivation for CppStreams are:
 |-----:| --------|-------------------------|----------------------------------------------------|
 |      | Done    | from                    | Creates a source from a STL container              |
 |      | Done    | from_iterators          | Creates a source from a pair of iterators          |
-|    1 | Planned | from_array              | Creates a source from a C-style array              |
-|    1 | Planned | from_empty              | Creates an empty source                            |
-|    1 | Planned | from_repeat             | Creates an source from a value and repeat count    |
-|    2 | Planned | from_singleton          | Creates an source from a value                     |
+|      | Done    | from_array              | Creates a source from a C-style array              |
+|      | Done    | from_repeat             | Creates an source from a value and repeat count    |
+|      | Done    | from_singleton          | Creates an source from a value                     |
+|      | Done    | from_empty              | Creates an empty source                            |
 |    2 | Planned | from_unfold             | Creates an source from an unfold function          |
 |    2 | Planned | from_generator          | Creates an source from a generator function        |
 
@@ -127,15 +127,17 @@ The motivation for CppStreams are:
 
 # TODO
 
-NEXT: 008
+NEXT: 010
 
-7. 006 - performance: Add performance tests
-8. 007 - coverage: Add code coverage tests
-2. 001 - general: Capture by RValue reference as implied here: [capture-by-universal-reference](http://stackoverflow.com/questions/21238463/capture-by-universal-reference)
-3. 002 - iteration_sink: Check return type, if void return false
-4. 003 - from: Should capture the container by value if RValue reference
-5. 004 - test: Figure out how to test negative type test cases (these will trigger compilation errors).
-6. 005 - general: Not happy with the requirement to capture this in lambdas, find alternative
+1. 006 - performance: Add performance tests
+1. 007 - coverage: Add code coverage tests
+1. 001 - general: Capture by RValue reference as implied here: [capture-by-universal-reference](http://stackoverflow.com/questions/21238463/capture-by-universal-reference)
+1. 002 - iteration_sink: Check return type, if void return false
+1. 008 - general: Use static_assert to check argument types
+1. 009 - general: Use std::forward in API functions
+1. 003 - from: Should capture the container by value if RValue reference
+1. 004 - test: Figure out how to test negative type test cases (these will trigger compilation errors).
+1. 005 - general: Not happy with the requirement to capture this in lambdas, find alternative
 
 ## Done
 

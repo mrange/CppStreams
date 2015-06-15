@@ -204,6 +204,82 @@ namespace functional_tests
       ;
   }
 
+  void test__from_array ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    int ints [] {3,1,4};
+
+    {
+      int expected  = 8;
+      int actual    = from_array (ints) >> to_sum ();
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+  }
+
+  void test__from_repeat ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      std::vector<user> expected  = empty_users;
+      std::vector<user> actual    =
+            from_repeat (empty_user, 0U)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<int> expected  {3,3,3};
+      std::vector<int> actual    =
+            from_repeat (3, 3U)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+  }
+
+  void test__from_singleton ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      std::vector<user> expected  { some_users[0] };
+      std::vector<user> actual    =
+            from_singleton (some_users[0])
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+  }
+
+  void test__from_empty ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      std::vector<user> expected  {};
+      std::vector<user> actual    =
+            from_empty<user> ()
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+  }
+
   void test__to_first_or_default ()
   {
     CPP_STREAMS__TEST ();
@@ -641,16 +717,22 @@ namespace functional_tests
       << std::endl
       ;
 
+    test__from_array          ();
+    test__from_repeat         ();
+    test__from_singleton      ();
+    test__from_empty          ();
+
+    test__append              ();
+    test__filter              ();
+    test__map                 ();
+    test__reverse             ();
+
     test__to_first_or_default ();
     test__to_last_or_default  ();
     test__to_sum              ();
     test__to_vector           ();
     test__to_iter             ();
     test__to_fold             ();
-    test__append              ();
-    test__filter              ();
-    test__map                 ();
-    test__reverse             ();
 
     test__example             ();
     //test__basic ();

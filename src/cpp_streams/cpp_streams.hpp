@@ -426,7 +426,7 @@ namespace cpp_streams
   CPP_STREAMS__PRELUDE auto from_iterators (TIterator begin, TIterator end)
   {
     return detail::adapt_source<decltype (*begin)> (
-      [begin,end] (auto && sink)
+      [begin = std::move (begin), end = std::move (end)] (auto && sink)
       {
         for (auto iter = begin; iter != end && sink (*iter); ++iter)
             ;
@@ -439,6 +439,46 @@ namespace cpp_streams
   CPP_STREAMS__PRELUDE auto from (TContainer & container)
   {
     return from_iterators (container.begin (), container.end ());
+  }
+
+  // --------------------------------------------------------------------------
+
+  template<typename TArray>
+  CPP_STREAMS__PRELUDE auto from_array (TArray & arr)
+  {
+    return from_iterators (arr, arr + std::extent<TArray, 0>::value);
+  }
+
+  // --------------------------------------------------------------------------
+
+  template<typename TValue>
+  CPP_STREAMS__PRELUDE auto from_repeat (TValue value, std::size_t count)
+  {
+    return detail::adapt_source<TValue> (
+      [count, value = std::move (value)] (auto && sink)
+      {
+        for (auto iter = 0U; iter < count && sink (value); ++iter)
+            ;
+      });
+  }
+
+  // --------------------------------------------------------------------------
+
+  template<typename TValue>
+  CPP_STREAMS__PRELUDE auto from_singleton (TValue value)
+  {
+    return from_repeat (std::move (value), 1);
+  }
+
+  // --------------------------------------------------------------------------
+
+  template<typename TValue>
+  CPP_STREAMS__PRELUDE auto from_empty ()
+  {
+    return detail::adapt_source<TValue> (
+      [] (auto && sink)
+      {
+      });
   }
 
   // --------------------------------------------------------------------------
