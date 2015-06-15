@@ -526,7 +526,7 @@ namespace functional_tests
     auto apply_collect = [] (auto && collect, auto && vs)
     {
       using source_type = detail::strip_type_t<decltype (collect (vs.front ()))>;
-      using value_type  = detail::strip_type_t<source_type::value_type>;
+      using value_type  = detail::strip_type_t<typename source_type::value_type>;
       std::vector<value_type> result;
       for (auto && v : vs)
       {
