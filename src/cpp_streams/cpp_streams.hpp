@@ -134,7 +134,7 @@ namespace cpp_streams
       template<typename TValueType, typename TSource>
       CPP_STREAMS__PRELUDE auto consume (TSource && source) const
       {
-        static_assert (std::is_same<TValueType, TOtherSource::value_type>::value, "TSource and TOtherSource must be a cpp_streams source of same value_type");
+        static_assert (std::is_same<TValueType, typename TOtherSource::value_type>::value, "TSource and TOtherSource must be a cpp_streams source of same value_type");
 
         return adapt_source<TValueType> (
           [this, other_source = other_source, source = std::forward<TSource> (source)] (auto && sink)
