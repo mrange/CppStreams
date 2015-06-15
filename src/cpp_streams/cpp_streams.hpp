@@ -620,7 +620,7 @@ namespace cpp_streams
   CPP_STREAMS__PRELUDE auto from_empty ()
   {
     return detail::adapt_source<TValue> (
-      [] (auto && sink)
+      [] (auto &&)
       {
       });
   }

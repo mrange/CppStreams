@@ -140,7 +140,7 @@ namespace functional_tests
     {1003, "Steve"  , "Jobs"  , {36,35,34,33,32,31}},
   };
 
-  void test_error (char const * file_name, int line_no, char const * function_name, char const * message)
+  void test_error (char const * /*file_name*/, int line_no, char const * /*function_name*/, char const * message)
   {
     ++errors_detected;
     std::cout
@@ -220,7 +220,7 @@ namespace functional_tests
     return sum;
   }
 
-  void test_prelude (char const * file_name, int line_no, char const * function_name)
+  void test_prelude (char const * /*file_name*/, int /*line_no*/, char const * function_name)
   {
     std::cout
       << "Running: "
@@ -835,7 +835,7 @@ namespace functional_tests
       std::vector<int>  expected = {};
       std::vector<int>  actual   =
             from (some_ints)
-        >>  skip_while ([] (auto && v) { return true; })
+        >>  skip_while ([] (auto &&) { return true; })
         >>  to_vector ()
         ;
       CPP_STREAMS__EQUAL (expected, actual);
@@ -845,7 +845,7 @@ namespace functional_tests
       std::vector<int>  expected {};
       std::vector<int>  actual   =
             from (empty_ints)
-        >>  skip_while ([] (auto && v) { return false; })
+        >>  skip_while ([] (auto &&) { return false; })
         >>  to_vector ()
         ;
       CPP_STREAMS__EQUAL (expected, actual);
@@ -855,7 +855,7 @@ namespace functional_tests
       std::vector<user> expected = some_users;
       std::vector<user> actual   =
             from (some_users)
-        >>  skip_while ([] (auto && v) { return false; })
+        >>  skip_while ([] (auto &&) { return false; })
         >>  to_vector ()
         ;
       CPP_STREAMS__EQUAL (expected, actual);
@@ -883,7 +883,7 @@ namespace functional_tests
       std::vector<int>  expected = {};
       std::vector<int>  actual   =
             from (some_ints)
-        >>  take_while ([] (auto && v) { return false; })
+        >>  take_while ([] (auto &&) { return false; })
         >>  to_vector ()
         ;
       CPP_STREAMS__EQUAL (expected, actual);
@@ -893,7 +893,7 @@ namespace functional_tests
       std::vector<int>  expected {};
       std::vector<int>  actual   =
             from (empty_ints)
-        >>  take_while ([] (auto && v) { return true; })
+        >>  take_while ([] (auto &&) { return true; })
         >>  to_vector ()
         ;
       CPP_STREAMS__EQUAL (expected, actual);
@@ -903,7 +903,7 @@ namespace functional_tests
       std::vector<user> expected = some_users;
       std::vector<user> actual   =
             from (some_users)
-        >>  take_while ([] (auto && v) { return true; })
+        >>  take_while ([] (auto &&) { return true; })
         >>  to_vector ()
         ;
       CPP_STREAMS__EQUAL (expected, actual);
