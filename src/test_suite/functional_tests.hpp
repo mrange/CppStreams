@@ -1044,7 +1044,7 @@ namespace functional_tests
     return std::chrono::duration_cast<std::chrono::milliseconds> (diff);
   }
 
-  __declspec(noinline) auto create_vector (int inner)
+  auto create_vector (int inner)
   {
     std::vector<int> ints;
     ints.reserve (inner);
