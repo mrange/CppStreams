@@ -50,32 +50,18 @@ namespace functional_tests
     {
       return
             true
-        &&  id          == o.id
-        &&  first_name  == o.first_name
-        &&  last_name   == o.last_name
+        &&  id                == o.id
+        &&  first_name        == o.first_name
+        &&  last_name         == o.last_name
+        &&  lottery_numbers   == o.lottery_numbers
         ;
     }
 
-    std::uint64_t id        ;
-    std::string   first_name;
-    std::string   last_name ;
+    std::uint64_t     id              ;
+    std::string       first_name      ;
+    std::string       last_name       ;
+    std::vector<int>  lottery_numbers ;
   };
-
-  std::ostream & operator << (std::ostream & s, user const & v)
-  {
-    s
-      << "{user"
-      << ", id:"
-      << v.id
-      << ", first_name:'"
-      << v.first_name
-      << "', last_name:'"
-      << v.last_name
-      << "'}"
-      ;
-
-    return s;
-  }
 
   template<typename TOne, typename TTwo>
   std::ostream & operator << (std::ostream & s, std::tuple<TOne, TTwo> const & v)
@@ -115,6 +101,24 @@ namespace functional_tests
     return s;
   }
 
+  std::ostream & operator << (std::ostream & s, user const & v)
+  {
+    s
+      << "{user"
+      << ", id:"
+      << v.id
+      << ", first_name:'"
+      << v.first_name
+      << "', last_name:'"
+      << v.last_name
+      << "', lottery_numbers:'"
+      << v.lottery_numbers
+      << "'}"
+      ;
+
+    return s;
+  }
+
   constexpr std::size_t operator "" _sz ( unsigned long long n )
   {
     return n;
@@ -130,9 +134,9 @@ namespace functional_tests
   std::vector<user> empty_users {};
   std::vector<user> some_users
   {
-    {1001, "Bill"   , "Gates" },
-    {1002, "Melinda", "Gates" },
-    {1003, "Steve"  , "Jobs"  },
+    {1001, "Bill"   , "Gates" , {1,2,3,4,5,6      }},
+    {1002, "Melinda", "Gates" , {1,4,9,16,25,36   }},
+    {1003, "Steve"  , "Jobs"  , {36,35,34,33,32,31}},
   };
 
   void test_error (char const * file_name, int line_no, char const * function_name, char const * message)
@@ -188,6 +192,11 @@ namespace functional_tests
   auto identity = [] (auto && v)
   {
     return std::forward<decltype (v)> (v);
+  };
+
+  auto map_tostring = [] (auto && v)
+  {
+    return std::to_string (std::forward<decltype(v)> (v));
   };
 
   auto map_id = [] (user const & v)
@@ -508,6 +517,92 @@ namespace functional_tests
 
   }
 
+  void test__collect ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    auto collect_simple   = [] (user const & u) { return from (u.lottery_numbers); };
+    auto collect_advanced = [] (user const & u) { return from (u.lottery_numbers) >> map (map_tostring); };
+
+    {
+      std::vector<int>  expected  {};
+      std::vector<int>  actual    =
+            from (empty_users)
+        >>  collect (collect_simple)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<int>  expected  = some_users[0].lottery_numbers;
+      std::vector<int>  actual    =
+            from_singleton (some_users[0])
+        >>  collect (collect_simple)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<std::string>  expected  =
+            from (some_users[0].lottery_numbers)
+        >>  map (map_tostring)
+        >> to_vector ()
+        ;
+      std::vector<std::string>  actual    =
+            from_singleton (some_users[0])
+        >>  collect (collect_advanced)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    // These tests fails in VS2015 RC
+#ifndef _MSC_VER
+    auto apply_collect = [] (auto && collect, auto && vs)
+    {
+      using source_type = detail::strip_type_t<decltype (collect (vs.front ()))>;
+      using value_type  = detail::strip_type_t<typename source_type::value_type>;
+      std::vector<value_type> result;
+      for (auto && v : vs)
+      {
+            collect (std::forward<decltype(v)> (v))
+        >>  to_iter ([&] (auto && iv)
+            {
+              result.push_back (std::forward<decltype(iv)> (iv));
+              return true;
+            })
+        ;
+      }
+      return result;
+    };
+
+    {
+      std::vector<int>  expected  = apply_collect (collect_simple, some_users);
+      std::vector<int>  actual    =
+            from (some_users)
+        >>  collect (collect_simple)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<std::string>  expected  = apply_collect (collect_advanced, some_users);
+      std::vector<std::string>  actual    =
+            from (some_users)
+        >>  collect (collect_advanced)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+#endif
+
+  }
+
   void test__filter ()
   {
     CPP_STREAMS__TEST ();
@@ -569,8 +664,8 @@ namespace functional_tests
 
     using namespace cpp_streams;
 
-    auto map_int   = [] (int v) { return std::to_string (v); };
-    auto map_user  = map_id;
+    auto map_int   = map_tostring ;
+    auto map_user  = map_id       ;
 
     auto apply_map = [] (auto && map, auto && vs)
     {
@@ -893,6 +988,7 @@ namespace functional_tests
     test__from_empty          ();
 
     test__append              ();
+    test__collect             ();
     test__filter              ();
     test__map                 ();
     test__mapi                ();
