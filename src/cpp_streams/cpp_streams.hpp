@@ -155,6 +155,52 @@ namespace cpp_streams
     // ------------------------------------------------------------------------
 
     template<typename TPredicate>
+    struct collect_pipe
+    {
+      TPredicate  predicate ;
+
+      template<typename TValue>
+      static TValue get_value ();
+
+      CPP_STREAMS__BODY (collect_pipe);
+
+      explicit CPP_STREAMS__PRELUDE collect_pipe (TPredicate predicate)
+        : predicate (std::move (predicate))
+      {
+      }
+
+      template<typename TValueType, typename TSource>
+      CPP_STREAMS__PRELUDE auto consume (TSource && source) const
+      {
+        using inner_source_type = decltype (predicate (get_value<TValueType> ()));
+
+        static_assert (is_source_adapter<inner_source_type>::value, "consume predicate must return a proper cpp_streams source");
+
+        return adapt_source<typename inner_source_type::value_type> (
+          [this, predicate = predicate, source = std::forward<TSource> (source)] (auto && sink)
+          {
+            source ([&predicate, &sink] (auto && v)
+            {
+              auto result = true;
+
+              // Don't use std::forward<decltype(v)> (v) as this might cause v to destroy
+              //  If the inner_source is member field of v we do like v to live on
+              auto inner_source = predicate (v);
+
+              inner_source.source ([&result, &sink] (auto && iv)
+              {
+                return result = sink (std::forward<decltype(iv)> (iv));
+              });
+
+              return result;
+            });
+          });
+      }
+    };
+
+    // ------------------------------------------------------------------------
+
+    template<typename TPredicate>
     struct filter_pipe
     {
       TPredicate  predicate ;
@@ -212,7 +258,7 @@ namespace cpp_streams
         return adapt_source<value_type> (
           [this, predicate = predicate, source = std::forward<TSource> (source)] (auto && sink)
           {
-            source ([&predicate, &sink (sink)] (auto && v)
+            source ([&predicate, &sink] (auto && v)
             {
               return sink (predicate (std::forward<decltype(v)> (v)));
             });
@@ -246,7 +292,7 @@ namespace cpp_streams
           [this, predicate = predicate, source = std::forward<TSource> (source)] (auto && sink)
           {
             std::size_t iter = 0U;
-            source ([&iter, &predicate, &sink (sink)] (auto && v)
+            source ([&iter, &predicate, &sink] (auto && v)
             {
               return sink (predicate (iter++, std::forward<decltype(v)> (v)));
             });
@@ -608,6 +654,14 @@ namespace cpp_streams
   CPP_STREAMS__PRELUDE auto append (TOtherSource other_source)
   {
     return detail::append_pipe<TOtherSource> (std::move (other_source));
+  }
+
+  // --------------------------------------------------------------------------
+
+  template<typename TPredicate>
+  CPP_STREAMS__PRELUDE auto collect (TPredicate predicate)
+  {
+    return detail::collect_pipe<TPredicate> (std::move (predicate));
   }
 
   // --------------------------------------------------------------------------
