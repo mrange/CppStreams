@@ -424,7 +424,7 @@ namespace cpp_streams
     {
       CPP_STREAMS__BODY (first_or_default_sink);
 
-      first_or_default_sink () = default;
+      CPP_STREAMS__PRELUDE first_or_default_sink () = default;
 
       template<typename TValueType, typename TSource>
       CPP_STREAMS__SINK auto consume (TSource && source) const
@@ -507,7 +507,7 @@ namespace cpp_streams
     {
       CPP_STREAMS__BODY (last_or_default_sink);
 
-      last_or_default_sink () = default;
+      CPP_STREAMS__PRELUDE last_or_default_sink () = default;
 
       template<typename TValueType, typename TSource>
       CPP_STREAMS__SINK auto consume (TSource && source) const
@@ -533,7 +533,7 @@ namespace cpp_streams
     {
       CPP_STREAMS__BODY (sum_sink);
 
-      sum_sink () = default;
+      CPP_STREAMS__PRELUDE sum_sink () = default;
 
       template<typename TValueType, typename TSource>
       CPP_STREAMS__SINK auto consume (TSource && source) const
@@ -559,7 +559,7 @@ namespace cpp_streams
     {
       CPP_STREAMS__BODY (vector_sink);
 
-      vector_sink () = default;
+      CPP_STREAMS__PRELUDE vector_sink () = default;
 
       template<typename TValueType, typename TSource>
       CPP_STREAMS__SINK auto consume (TSource && source) const
