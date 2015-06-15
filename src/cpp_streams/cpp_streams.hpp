@@ -222,6 +222,40 @@ namespace cpp_streams
 
     // ------------------------------------------------------------------------
 
+    template<typename TPredicate>
+    struct mapi_pipe
+    {
+      TPredicate  predicate ;
+
+      template<typename TValue>
+      static TValue get_value ();
+
+      CPP_STREAMS__BODY (mapi_pipe);
+
+      explicit CPP_STREAMS__PRELUDE mapi_pipe (TPredicate predicate)
+        : predicate (std::move (predicate))
+      {
+      }
+
+      template<typename TValueType, typename TSource>
+      CPP_STREAMS__PRELUDE auto consume (TSource && source) const
+      {
+        using value_type = decltype (predicate (0U, get_value<TValueType> ()));
+
+        return adapt_source<value_type> (
+          [this, predicate = predicate, source = std::forward<TSource> (source)] (auto && sink)
+          {
+            std::size_t iter = 0U;
+            source ([&iter, &predicate, &sink (sink)] (auto && v)
+            {
+              return sink (predicate (iter++, std::forward<decltype(v)> (v)));
+            });
+          });
+      }
+    };
+
+    // ------------------------------------------------------------------------
+
     struct reverse_pipe
     {
       std::size_t reserve;
@@ -590,6 +624,14 @@ namespace cpp_streams
   CPP_STREAMS__PRELUDE auto map (TPredicate predicate)
   {
     return detail::map_pipe<TPredicate> (std::move (predicate));
+  }
+
+  // --------------------------------------------------------------------------
+
+  template<typename TPredicate>
+  CPP_STREAMS__PRELUDE auto mapi (TPredicate predicate)
+  {
+    return detail::mapi_pipe<TPredicate> (std::move (predicate));
   }
 
   // --------------------------------------------------------------------------

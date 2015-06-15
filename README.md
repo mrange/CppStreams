@@ -80,8 +80,8 @@ The motivation for CppStreams are:
 |      | Done    | append                  | Appends two pipelines                              |
 |      | Done    | skip_while              | Skips while func is true for elements in pipeline  |
 |      | Done    | take_while              | Takes while func is true for elements in pipeline  |
+|      | Done    | mapi                    | Maps elements in pipeline using mapi function      |
 |    1 | Planned | collect                 | Collects sub elements in pipeline                  |
-|    1 | Planned | mapi                    | Maps elements in pipeline using mapi function      |
 |    1 | Planned | order_by                | Orders elements in pipeline using order function   |
 |    1 | Planned | then_by                 | Orders elements in pipeline using order function   |
 |    1 | Planned | skip                    | Skips n elements in pipeline                       |

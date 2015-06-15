@@ -24,6 +24,7 @@
 # include <iterator>
 # include <sstream>
 # include <string>
+# include <tuple>
 // ----------------------------------------------------------------------------
 # define CPP_STREAMS__TEST()                  test_prelude (__FILE__, __LINE__, __FUNCTION__)
 # define CPP_STREAMS__ERROR(msg)              test_error (__FILE__, __LINE__, __FUNCTION__, msg)
@@ -71,6 +72,20 @@ namespace functional_tests
       << "', last_name:'"
       << v.last_name
       << "'}"
+      ;
+
+    return s;
+  }
+
+  template<typename TOne, typename TTwo>
+  std::ostream & operator << (std::ostream & s, std::tuple<TOne, TTwo> const & v)
+  {
+    s
+      << "{"
+      << std::get<0> (v)
+      << ", "
+      << std::get<1> (v)
+      << "}"
       ;
 
     return s;
@@ -603,6 +618,66 @@ namespace functional_tests
 
   }
 
+  void test__mapi ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    auto mapi_int   = [] (std::size_t idx, int v)
+    {
+      return std::make_tuple (idx, std::to_string (v));
+    };
+    auto mapi_user  = [] (std::size_t idx, user const & v)
+    {
+      return std::make_tuple (idx, v.id);
+    };
+
+    auto apply_mapi = [] (auto && mapi, auto && vs)
+    {
+      using value_type = std::remove_reference_t<decltype (mapi (0U, vs.front ()))>;
+      std::vector<value_type> result;
+      result.reserve (vs.size ());
+      std::size_t idx = 0;
+      for (auto && v : vs)
+      {
+        result.push_back (mapi (idx++, std::forward<decltype(v)> (v)));
+      }
+      return result;
+    };
+
+    {
+      std::vector<std::tuple<std::size_t, std::string>> expected {};
+      std::vector<std::tuple<std::size_t, std::string>> actual   =
+            from (empty_ints)
+        >>  mapi (mapi_int)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<std::tuple<std::size_t, std::string>> expected = apply_mapi (mapi_int, some_ints);
+      std::vector<std::tuple<std::size_t, std::string>> actual   =
+            from (some_ints)
+        >>  mapi (mapi_int)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<std::tuple<std::size_t, std::uint64_t>> expected = apply_mapi (mapi_user, some_users);
+      std::vector<std::tuple<std::size_t, std::uint64_t>> actual   =
+            from (some_users)
+        >>  mapi (mapi_user)
+        >>  to_vector ()
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+  }
+
   void test__reverse ()
   {
     CPP_STREAMS__TEST ();
@@ -820,6 +895,7 @@ namespace functional_tests
     test__append              ();
     test__filter              ();
     test__map                 ();
+    test__mapi                ();
     test__reverse             ();
     test__skip_while          ();
     test__take_while          ();
