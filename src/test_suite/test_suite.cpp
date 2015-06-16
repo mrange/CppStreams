@@ -14,6 +14,22 @@
 
 #include "stdafx.h"
 
+#include "../cpp_streams/cpp_streams.hpp"
+
+int main()
+{
+  using namespace cpp_streams;
+
+  int ints[] = {3,1,4,1,5};
+
+  auto sum =
+        from_array (ints)
+    >>  to_sum ()
+    ;
+
+  return 0;
+}
+/*
 #include "functional_tests.hpp"
 
 int main()
@@ -24,3 +40,4 @@ int main()
   return 0;
 }
 
+*/

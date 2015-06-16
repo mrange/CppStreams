@@ -86,7 +86,7 @@ namespace cpp_streams
       template<typename TSink>
       CPP_STREAMS__PRELUDE auto operator >> (TSink && sink) const
       {
-        return sink.template consume<TValueType> (source);
+        return sink.template consume<TValueType> (*this);
       }
     };
 
@@ -98,7 +98,7 @@ namespace cpp_streams
     }
 
     template<typename T>
-    struct is_source_adapter
+    struct is_source_adapter_impl
     {
       enum
       {
@@ -107,13 +107,73 @@ namespace cpp_streams
     };
 
     template<typename TValueType, typename TSource>
-    struct is_source_adapter<source_adapter<TValueType, TSource>>
+    struct is_source_adapter_impl<source_adapter<TValueType, TSource>>
     {
       enum
       {
         value = true,
       };
     };
+
+    template<typename T>
+    struct is_source_adapter
+    {
+      enum
+      {
+        value = is_source_adapter_impl<strip_type_t<T>>::value,
+      };
+    };
+
+    template<typename T>
+    struct get_source_value_type_impl;
+
+    template<typename TValueType, typename TSource>
+    struct get_source_value_type_impl<source_adapter<TValueType, TSource>>
+    {
+      using type = TValueType;
+    };
+
+    template<typename T>
+    struct get_source_value_type
+    {
+      using type = typename get_source_value_type_impl<strip_type_t<T>>::type;
+    };
+
+    template<typename T>
+    using get_source_value_type_t = typename get_source_value_type<T>::type;
+
+    // ------------------------------------------------------------------------
+
+    template<typename TSink>
+    struct sink_adapter
+    {
+      TSink sink;
+
+      CPP_STREAMS__BODY (sink_adapter);
+
+      explicit CPP_STREAMS__PRELUDE sink_adapter (TSink const & sink)
+        : sink (sink)
+      {
+      }
+
+      explicit CPP_STREAMS__PRELUDE sink_adapter (TSink && sink)
+        : sink (std::move (sink))
+      {
+      }
+
+      template<typename TValueType, typename TSource>
+      CPP_STREAMS__SINK auto consume (TSource && source) const
+      {
+        return sink (std::forward<TSource> (source));
+      }
+    };
+
+    // Adapts a sink function into a Sink
+    template<typename TSink>
+    CPP_STREAMS__PRELUDE auto adapt_sink (TSink && sink)
+    {
+      return sink_adapter<TSink> (std::forward<TSink> (sink));
+    }
 
     // ------------------------------------------------------------------------
 
@@ -134,19 +194,21 @@ namespace cpp_streams
       template<typename TValueType, typename TSource>
       CPP_STREAMS__PRELUDE auto consume (TSource && source) const
       {
-        static_assert (std::is_same<TValueType, typename TOtherSource::value_type>::value, "TSource and TOtherSource must be a cpp_streams source of same value_type");
+        using value_type        = get_source_value_type_t<decltype (source)>;
+        using other_value_type  = get_source_value_type_t<decltype (source)>;
+        static_assert (std::is_convertible<other_value_type, value_type, "TOtherSource values must be convertible into a TSource value");
 
-        return adapt_source<TValueType> (
+        return adapt_source<value_type> (
           [this, other_source = other_source, source = std::forward<TSource> (source)] (auto && sink)
           {
             source ([&sink] (auto && v)
             {
-              return sink (std::forward<decltype(v)> (v));
+              return sink (std::forward<decltype (v)> (v));
             });
 
             other_source.source ([&sink] (auto && v)
             {
-              return sink (std::forward<decltype(v)> (v));
+              return sink (std::forward<decltype (v)> (v));
             });
           });
       }
@@ -173,23 +235,24 @@ namespace cpp_streams
       CPP_STREAMS__PRELUDE auto consume (TSource && source) const
       {
         using inner_source_type = decltype (predicate (get_value<TValueType> ()));
+        using inner_value_type  = get_source_value_type_t<inner_source_type>;
 
         static_assert (is_source_adapter<inner_source_type>::value, "consume predicate must return a proper cpp_streams source");
 
-        return adapt_source<typename inner_source_type::value_type> (
+        return adapt_source<inner_value_type> (
           [this, predicate = predicate, source = std::forward<TSource> (source)] (auto && sink)
           {
             source ([&predicate, &sink] (auto && v)
             {
               auto result = true;
 
-              // Don't use std::forward<decltype(v)> (v) as this might cause v to destroy
+              // Don't use std::forward<decltype (v)> (v) as this might cause v to destroy
               //  If the inner_source is member field of v we do like v to live on
               auto inner_source = predicate (v);
 
               inner_source.source ([&result, &sink] (auto && iv)
               {
-                return result = sink (std::forward<decltype(iv)> (iv));
+                return result = sink (std::forward<decltype (iv)> (iv));
               });
 
               return result;
@@ -222,7 +285,7 @@ namespace cpp_streams
             {
               if (predicate (v))
               {
-                return sink (std::forward<decltype(v)> (v));
+                return sink (std::forward<decltype (v)> (v));
               }
               else
               {
@@ -260,7 +323,7 @@ namespace cpp_streams
           {
             source ([&predicate, &sink] (auto && v)
             {
-              return sink (predicate (std::forward<decltype(v)> (v)));
+              return sink (predicate (std::forward<decltype (v)> (v)));
             });
           });
       }
@@ -294,7 +357,7 @@ namespace cpp_streams
             std::size_t iter = 0U;
             source ([&iter, &predicate, &sink] (auto && v)
             {
-              return sink (predicate (iter++, std::forward<decltype(v)> (v)));
+              return sink (predicate (iter++, std::forward<decltype (v)> (v)));
             });
           });
       }
@@ -326,7 +389,7 @@ namespace cpp_streams
 
             source ([&result] (auto && v)
             {
-              result.push_back (std::forward<decltype(v)> (v));
+              result.push_back (std::forward<decltype (v)> (v));
               return true;
             });
 
@@ -365,7 +428,7 @@ namespace cpp_streams
             {
               if (!do_skip)
               {
-                return sink (std::forward<decltype(v)> (v));
+                return sink (std::forward<decltype (v)> (v));
               }
               if (predicate (v))
               {
@@ -374,7 +437,7 @@ namespace cpp_streams
               else
               {
                 do_skip = false;
-                return sink (std::forward<decltype(v)> (v));
+                return sink (std::forward<decltype (v)> (v));
               }
             });
           });
@@ -407,7 +470,7 @@ namespace cpp_streams
             {
               if (predicate (v))
               {
-                return sink (std::forward<decltype(v)> (v));
+                return sink (std::forward<decltype (v)> (v));
               }
               else
               {
@@ -745,9 +808,24 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
-  CPP_STREAMS__PRELUDE auto to_sum ()
+  CPP_STREAMS__SINK auto to_sum ()
   {
-    return detail::sum_sink ();
+    return detail::adapt_sink (
+      [] (auto && source)
+      {
+        using value_type = detail::strip_type_t<detail::get_source_value_type_t<decltype (source)>>;
+
+        value_type result {};
+
+        source.source (
+          [&] (auto && v)
+          {
+            result += std::forward<decltype (v)> (v);
+            return true;
+          });
+
+        return result;
+      });
   }
 
   // --------------------------------------------------------------------------
