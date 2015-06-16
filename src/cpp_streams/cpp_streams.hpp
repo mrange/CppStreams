@@ -196,7 +196,7 @@ namespace cpp_streams
       {
         using value_type        = get_source_value_type_t<decltype (source)>;
         using other_value_type  = get_source_value_type_t<decltype (source)>;
-        static_assert (std::is_convertible<other_value_type, value_type, "TOtherSource values must be convertible into a TSource value");
+        static_assert (std::is_convertible<other_value_type, value_type>::value, "TOtherSource values must be convertible into a TSource value");
 
         return adapt_source<value_type> (
           [this, other_source = other_source, source = std::forward<TSource> (source)] (auto && sink)
@@ -818,7 +818,7 @@ namespace cpp_streams
         value_type result {};
 
         source.source (
-          [&] (auto && v)
+          [&result] (auto && v)
           {
             result += std::forward<decltype (v)> (v);
             return true;
