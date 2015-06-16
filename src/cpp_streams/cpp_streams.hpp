@@ -241,41 +241,6 @@ namespace cpp_streams
     // ------------------------------------------------------------------------
 
     template<typename TPredicate>
-    struct filter_pipe
-    {
-      TPredicate  predicate ;
-
-      CPP_STREAMS__BODY (filter_pipe);
-
-      explicit CPP_STREAMS__PRELUDE filter_pipe (TPredicate predicate)
-        : predicate (std::move (predicate))
-      {
-      }
-
-      template<typename TValueType, typename TSource>
-      CPP_STREAMS__PRELUDE auto consume (TSource && source) const
-      {
-        return adapt_source<TValueType> (
-          [this, predicate = predicate, source = std::forward<TSource> (source)] (auto && sink)
-          {
-            source ([&predicate, &sink] (auto && v)
-            {
-              if (predicate (v))
-              {
-                return sink (std::forward<decltype (v)> (v));
-              }
-              else
-              {
-                return true;
-              }
-            });
-          });
-      }
-    };
-
-    // ------------------------------------------------------------------------
-
-    template<typename TPredicate>
     struct map_pipe
     {
       TPredicate  predicate ;
@@ -549,12 +514,9 @@ namespace cpp_streams
   CPP_STREAMS__PRELUDE auto filter (TPredicate && predicate)
   {
     return
-      [=] (auto && source)
+      [predicate = std::forward<TPredicate> (predicate)] (auto && source)
       {
-        // WORKAROUND: For some reason 'using' doesn't work here in VS2015 RC
-        //  Interestingly enough it's not needed in to_last_or_default
-        //  Seems order dependent
-        typedef detail::get_source_value_type_t<decltype (source)> value_type;
+        using value_type = detail::get_source_value_type_t<decltype (source)>;
 
         return detail::adapt_source<value_type> (
           [predicate, source = std::forward<decltype (source)> (source)] (auto && sink)
