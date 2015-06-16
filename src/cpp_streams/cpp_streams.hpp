@@ -64,29 +64,29 @@ namespace cpp_streams
 
     // ------------------------------------------------------------------------
 
-    template<typename TValueType, typename TSource>
+    template<typename TValueType, typename TSourceFunction>
     struct source_adapter
     {
       using value_type = TValueType;
 
-      TSource source;
+      TSourceFunction source_function;
 
       CPP_STREAMS__BODY (source_adapter);
 
-      explicit CPP_STREAMS__PRELUDE source_adapter (TSource const & source)
-        : source (source)
+      explicit CPP_STREAMS__PRELUDE source_adapter (TSourceFunction const & source_function)
+        : source_function (source_function)
       {
       }
 
-      explicit CPP_STREAMS__PRELUDE source_adapter (TSource && source)
-        : source (std::move (source))
+      explicit CPP_STREAMS__PRELUDE source_adapter (TSourceFunction && source_function)
+        : source_function (std::move (source_function))
       {
       }
 
       template<typename TSink>
       CPP_STREAMS__PRELUDE auto operator >> (TSink && sink) const
       {
-        return sink.template consume<TValueType> (*this);
+        return sink (*this);
       }
     };
 
@@ -144,39 +144,6 @@ namespace cpp_streams
 
     // ------------------------------------------------------------------------
 
-    template<typename TSink>
-    struct sink_adapter
-    {
-      TSink sink;
-
-      CPP_STREAMS__BODY (sink_adapter);
-
-      explicit CPP_STREAMS__PRELUDE sink_adapter (TSink const & sink)
-        : sink (sink)
-      {
-      }
-
-      explicit CPP_STREAMS__PRELUDE sink_adapter (TSink && sink)
-        : sink (std::move (sink))
-      {
-      }
-
-      template<typename TValueType, typename TSource>
-      CPP_STREAMS__SINK auto consume (TSource && source) const
-      {
-        return sink (std::forward<TSource> (source));
-      }
-    };
-
-    // Adapts a sink function into a Sink
-    template<typename TSink>
-    CPP_STREAMS__PRELUDE auto adapt_sink (TSink && sink)
-    {
-      return sink_adapter<TSink> (std::forward<TSink> (sink));
-    }
-
-    // ------------------------------------------------------------------------
-
     template<typename TOtherSource>
     struct append_pipe
     {
@@ -206,7 +173,7 @@ namespace cpp_streams
               return sink (std::forward<decltype (v)> (v));
             });
 
-            other_source.source ([&sink] (auto && v)
+            other_source.source_function ([&sink] (auto && v)
             {
               return sink (std::forward<decltype (v)> (v));
             });
@@ -250,7 +217,7 @@ namespace cpp_streams
               //  If the inner_source is member field of v we do like v to live on
               auto inner_source = predicate (v);
 
-              inner_source.source ([&result, &sink] (auto && iv)
+              inner_source.source_function ([&result, &sink] (auto && iv)
               {
                 return result = sink (std::forward<decltype (iv)> (iv));
               });
@@ -619,7 +586,7 @@ namespace cpp_streams
 
   CPP_STREAMS__SINK auto to_first_or_default ()
   {
-    return detail::adapt_sink (
+    return
       [] (auto && source)
       {
         // WORKAROUND: For some reason 'using' doesn't work here in VS2015 RC
@@ -627,7 +594,7 @@ namespace cpp_streams
 
         value_type result;
 
-        source.source (
+        source.source_function (
           [&result] (auto && v)
           {
             result = (std::forward<decltype (v)> (v));
@@ -635,7 +602,7 @@ namespace cpp_streams
           });
 
         return result;
-      });
+      };
   }
 
   // --------------------------------------------------------------------------
@@ -643,15 +610,15 @@ namespace cpp_streams
   template<typename TIteration>
   CPP_STREAMS__SINK auto to_iter (TIteration && iteration)
   {
-    return detail::adapt_sink (
+    return
       [iteration = std::forward<TIteration> (iteration)] (auto && source)
       {
-        source.source (
+        source.source_function (
           [&iteration] (auto && v)
           {
             return iteration (v);
           });
-      });
+      };
   }
 
   // --------------------------------------------------------------------------
@@ -659,12 +626,12 @@ namespace cpp_streams
   template<typename TState, typename TFolder>
   CPP_STREAMS__PRELUDE auto to_fold (TState && initial, TFolder && folder)
   {
-    return detail::adapt_sink (
+    return
       [initial = std::forward<TState> (initial), folder = std::forward<TFolder> (folder)] (auto && source)
       {
         auto state = initial;
 
-        source.source (
+        source.source_function (
           [&state, &folder] (auto && v)
           {
             state = folder (std::move (state), std::forward<decltype (v)> (v));
@@ -672,14 +639,14 @@ namespace cpp_streams
           });
 
         return state;
-      });
+      };
   }
 
   // --------------------------------------------------------------------------
 
   CPP_STREAMS__SINK auto to_last_or_default ()
   {
-    return detail::adapt_sink (
+    return
       [] (auto && source)
       {
         // WORKAROUND: For some reason 'using' doesn't work here in VS2015 RC
@@ -687,7 +654,7 @@ namespace cpp_streams
 
         value_type result;
 
-        source.source (
+        source.source_function (
           [&result] (auto && v)
           {
             result = (std::forward<decltype (v)> (v));
@@ -695,14 +662,14 @@ namespace cpp_streams
           });
 
         return result;
-      });
+      };
   }
 
   // --------------------------------------------------------------------------
 
   CPP_STREAMS__SINK auto to_sum ()
   {
-    return detail::adapt_sink (
+    return
       [] (auto && source)
       {
         // WORKAROUND: For some reason 'using' doesn't work here in VS2015 RC
@@ -717,17 +684,17 @@ namespace cpp_streams
             return true;
           };
 
-        source.source (sink);
+        source.source_function (sink);
 
         return result;
-      });
+      };
   }
 
   // --------------------------------------------------------------------------
 
   CPP_STREAMS__SINK auto to_vector ()
   {
-    return detail::adapt_sink (
+    return
       [] (auto && source)
       {
         using value_type = detail::strip_type_t<detail::get_source_value_type_t<decltype (source)>>;
@@ -742,7 +709,7 @@ namespace cpp_streams
           });
 
         return result;
-      });
+      };
   }
 
   // --------------------------------------------------------------------------
