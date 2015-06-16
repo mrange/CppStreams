@@ -154,6 +154,11 @@ namespace cpp_streams
 
     // ------------------------------------------------------------------------
 
+    template<typename TValue>
+    static TValue get_value ();
+
+    // ------------------------------------------------------------------------
+
     template<typename TOtherSource>
     struct append_pipe
     {
@@ -543,9 +548,27 @@ namespace cpp_streams
   // --------------------------------------------------------------------------
 
   template<typename TPredicate>
-  CPP_STREAMS__PRELUDE auto map (TPredicate predicate)
+  CPP_STREAMS__PRELUDE auto map (TPredicate && predicate)
   {
-    return detail::map_pipe<TPredicate> (std::move (predicate));
+    return
+      // WORKAROUND: perfect forwarding would be preferable but clang++ & g++
+      //  complains:
+      //    variable 'predicate' cannot be implicitly captured in a lambda with no capture-default specified
+      //  Specifying a capture-default didn't help
+      [predicate] (auto && source)
+      {
+        using value_type      = detail::get_source_value_type_t<decltype (source)>      ;
+        using map_value_type  = decltype (predicate (detail::get_value<value_type> ())) ;
+
+        return detail::adapt_source<map_value_type> (
+          [predicate, source = std::forward<decltype (source)> (source)] (auto && sink)
+          {
+            source.source_function ([&predicate, &sink] (auto && v)
+            {
+              return sink (predicate (std::forward<decltype (v)> (v)));
+            });
+          });
+      };
   }
 
   // --------------------------------------------------------------------------

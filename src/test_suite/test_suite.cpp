@@ -17,6 +17,8 @@
 #define TEST
 #ifdef TEST
 
+#include <string>
+
 #include "../cpp_streams/cpp_streams.hpp"
 
 int main()
@@ -27,13 +29,14 @@ int main()
 
   auto r =
         from_array (ints)
-    >>  filter ([] (auto && v) { return v % 2 != 0; })
+//    >>  filter ([] (auto && v) { return v % 2 != 0; })
+    >>  map ([] (auto && v) { return std::to_string (v); })
 //    >>  to_fold (1, [] (auto && s, auto && v) { return s * v; })
-//    >>  to_vector ()
-    >>  to_sum ()
+    >>  to_vector ()
+//    >>  to_first_or_default ()
     ;
 
-  std::cout << r << std::endl;
+//  std::cout << r << std::endl;
 
   return 0;
 }
