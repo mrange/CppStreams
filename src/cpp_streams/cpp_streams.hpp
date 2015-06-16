@@ -549,14 +549,17 @@ namespace cpp_streams
   CPP_STREAMS__PRELUDE auto filter (TPredicate && predicate)
   {
     return
-      [predicate = std::forward<TPredicate> (predicate)] (auto && source)
+      [=] (auto && source)
       {
+        // WORKAROUND: For some reason 'using' doesn't work here in VS2015 RC
+        //  Interestingly enough it's not needed in to_last_or_default
+        //  Seems order dependent
         typedef detail::get_source_value_type_t<decltype (source)> value_type;
 
         return detail::adapt_source<value_type> (
-          [predicate = std::forward<TPredicate> (predicate), source = std::forward<TSource> (source)] (auto && sink)
+          [predicate, source = std::forward<decltype (source)> (source)] (auto && sink)
           {
-            source ([&predicate, &sink] (auto && v)
+            source.source_function ([&predicate, &sink] (auto && v)
             {
               if (predicate (v))
               {
