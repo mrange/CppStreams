@@ -514,7 +514,11 @@ namespace cpp_streams
   CPP_STREAMS__PRELUDE auto filter (TPredicate && predicate)
   {
     return
-      [predicate = std::forward<TPredicate> (predicate)] (auto && source)
+      // WORKAROUND: perfect forwarding would be preferable but clang++ & g++
+      //  complains:
+      //    variable 'predicate' cannot be implicitly captured in a lambda with no capture-default specified
+      //  Specifying a capture-default didn't help
+      [predicate] (auto && source)
       {
         using value_type = detail::get_source_value_type_t<decltype (source)>;
 
