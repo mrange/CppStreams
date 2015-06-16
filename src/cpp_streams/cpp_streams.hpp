@@ -483,169 +483,10 @@ namespace cpp_streams
 
     // ------------------------------------------------------------------------
 
-    struct first_or_default_sink
-    {
-      CPP_STREAMS__BODY (first_or_default_sink);
-
-      CPP_STREAMS__PRELUDE first_or_default_sink () = default;
-
-      template<typename TValueType, typename TSource>
-      CPP_STREAMS__SINK auto consume (TSource && source) const
-      {
-        using value_type = strip_type_t<TValueType>;
-
-        value_type result {};
-
-        source (
-          [&result] (auto && v)
-          {
-            result = std::forward<decltype (v)> (v);
-            return false;
-          });
-
-        return result;
-      }
-    };
-
-    // ------------------------------------------------------------------------
-
-    template<typename TFolder, typename TState>
-    struct fold_sink
-    {
-      TFolder folder  ;
-      TState  initial ;
-
-      CPP_STREAMS__BODY (fold_sink);
-
-      fold_sink (TFolder folder, TState initial)
-        : folder  (std::move (folder))
-        , initial (std::move (initial))
-      {
-      }
-
-      template<typename TValueType, typename TSource>
-      CPP_STREAMS__SINK auto consume (TSource && source) const
-      {
-        auto state = initial;
-
-        source (
-          [this, &state] (auto && v)
-          {
-            state = folder (std::move (state), std::forward<decltype (v)> (v));
-            return true;
-          });
-
-        return state;
-      }
-    };
-
-    // ------------------------------------------------------------------------
-
-    template<typename TIteration>
-    struct iteration_sink
-    {
-      TIteration iteration;
-
-      CPP_STREAMS__BODY (iteration_sink);
-
-      explicit CPP_STREAMS__PRELUDE iteration_sink (TIteration iteration)
-        : iteration (std::move (iteration))
-      {
-      }
-
-      template<typename TValueType, typename TSource>
-      CPP_STREAMS__SINK void consume (TSource && source) const
-      {
-        source (
-          [iteration = iteration] (auto && v)
-          {
-            return iteration (v);
-          });
-      }
-    };
-
-    // ------------------------------------------------------------------------
-
-    struct last_or_default_sink
-    {
-      CPP_STREAMS__BODY (last_or_default_sink);
-
-      CPP_STREAMS__PRELUDE last_or_default_sink () = default;
-
-      template<typename TValueType, typename TSource>
-      CPP_STREAMS__SINK auto consume (TSource && source) const
-      {
-        using value_type = strip_type_t<TValueType>;
-
-        value_type result {};
-
-        source (
-          [&result] (auto && v)
-          {
-            result = std::forward<decltype (v)> (v);
-            return true;
-          });
-
-        return result;
-      }
-    };
-
-    // ------------------------------------------------------------------------
-
-    struct sum_sink
-    {
-      CPP_STREAMS__BODY (sum_sink);
-
-      CPP_STREAMS__PRELUDE sum_sink () = default;
-
-      template<typename TValueType, typename TSource>
-      CPP_STREAMS__SINK auto consume (TSource && source) const
-      {
-        using value_type = strip_type_t<TValueType>;
-
-        value_type result {};
-
-        source (
-          [&result] (auto && v)
-          {
-            result += std::forward<decltype (v)> (v);
-            return true;
-          });
-
-        return result;
-      }
-    };
-
-    // ------------------------------------------------------------------------
-
-    struct vector_sink
-    {
-      CPP_STREAMS__BODY (vector_sink);
-
-      CPP_STREAMS__PRELUDE vector_sink () = default;
-
-      template<typename TValueType, typename TSource>
-      CPP_STREAMS__SINK auto consume (TSource && source) const
-      {
-        using value_type = strip_type_t<TValueType>;
-
-        std::vector<value_type> result;
-
-        source (
-          [&result] (auto && v)
-          {
-            result.push_back (std::forward<decltype (v)> (v));
-            return true;
-          });
-
-        return result;
-      }
-    };
-
-    // ------------------------------------------------------------------------
-
   }
 
+  // --------------------------------------------------------------------------
+  // Sources
   // --------------------------------------------------------------------------
 
   template<typename TIterator>
@@ -659,8 +500,6 @@ namespace cpp_streams
       });
   }
 
-  // --------------------------------------------------------------------------
-  // Sources
   // --------------------------------------------------------------------------
 
   template<typename TContainer>
@@ -778,49 +617,80 @@ namespace cpp_streams
   // Sinks
   // --------------------------------------------------------------------------
 
-  CPP_STREAMS__PRELUDE auto to_first_or_default ()
+  CPP_STREAMS__SINK auto to_first_or_default ()
   {
-    return detail::first_or_default_sink ();
+    return detail::adapt_sink (
+      [] (auto && source)
+      {
+        // WORKAROUND: For some reason 'using' doesn't work here in VS2015 RC
+        typedef detail::strip_type_t<detail::get_source_value_type_t<decltype (source)>> value_type;
+
+        value_type result;
+
+        source.source (
+          [&result] (auto && v)
+          {
+            result = (std::forward<decltype (v)> (v));
+            return false;
+          });
+
+        return result;
+      });
   }
 
   // --------------------------------------------------------------------------
 
   template<typename TIteration>
-  CPP_STREAMS__PRELUDE auto to_iter (TIteration iteration)
+  CPP_STREAMS__SINK auto to_iter (TIteration && iteration)
   {
-    return detail::iteration_sink<TIteration> (std::move (iteration));
+    return detail::adapt_sink (
+      [iteration = std::forward<TIteration> (iteration)] (auto && source)
+      {
+        source.source (
+          [&iteration] (auto && v)
+          {
+            return iteration (v);
+          });
+      });
   }
 
   // --------------------------------------------------------------------------
 
   template<typename TState, typename TFolder>
-  CPP_STREAMS__PRELUDE auto to_fold (TState initial, TFolder folder)
+  CPP_STREAMS__PRELUDE auto to_fold (TState && initial, TFolder && folder)
   {
-    return detail::fold_sink<TFolder, TState> (std::move (folder), std::move (initial));
+    return detail::adapt_sink (
+      [initial = std::forward<TState> (initial), folder = std::forward<TFolder> (folder)] (auto && source)
+      {
+        auto state = initial;
+
+        source.source (
+          [&state, &folder] (auto && v)
+          {
+            state = folder (std::move (state), std::forward<decltype (v)> (v));
+            return true;
+          });
+
+        return state;
+      });
   }
 
   // --------------------------------------------------------------------------
 
-  CPP_STREAMS__PRELUDE auto to_last_or_default ()
-  {
-    return detail::last_or_default_sink ();
-  }
-
-  // --------------------------------------------------------------------------
-
-  CPP_STREAMS__SINK auto to_sum ()
+  CPP_STREAMS__SINK auto to_last_or_default ()
   {
     return detail::adapt_sink (
       [] (auto && source)
       {
-        using value_type = detail::strip_type_t<detail::get_source_value_type_t<decltype (source)>>;
+        // WORKAROUND: For some reason 'using' doesn't work here in VS2015 RC
+        typedef detail::strip_type_t<detail::get_source_value_type_t<decltype (source)>> value_type;
 
-        value_type result {};
+        value_type result;
 
         source.source (
           [&result] (auto && v)
           {
-            result += std::forward<decltype (v)> (v);
+            result = (std::forward<decltype (v)> (v));
             return true;
           });
 
@@ -830,9 +700,49 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
-  CPP_STREAMS__PRELUDE auto to_vector ()
+  CPP_STREAMS__SINK auto to_sum ()
   {
-    return detail::vector_sink ();
+    return detail::adapt_sink (
+      [] (auto && source)
+      {
+        // WORKAROUND: For some reason 'using' doesn't work here in VS2015 RC
+        typedef detail::strip_type_t<detail::get_source_value_type_t<decltype (source)>> value_type;
+
+        value_type result {};
+
+        auto sink =
+          [&result] (auto && v)
+          {
+            result += std::forward<decltype (v)> (v);
+            return true;
+          };
+
+        source.source (sink);
+
+        return result;
+      });
+  }
+
+  // --------------------------------------------------------------------------
+
+  CPP_STREAMS__SINK auto to_vector ()
+  {
+    return detail::adapt_sink (
+      [] (auto && source)
+      {
+        using value_type = detail::strip_type_t<detail::get_source_value_type_t<decltype (source)>>;
+
+        std::vector<value_type> result;
+
+        source.source (
+          [&result] (auto && v)
+          {
+            result.push_back (std::forward<decltype (v)> (v));
+            return true;
+          });
+
+        return result;
+      });
   }
 
   // --------------------------------------------------------------------------

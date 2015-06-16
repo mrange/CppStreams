@@ -14,6 +14,9 @@
 
 #include "stdafx.h"
 
+#define TEST
+#ifdef TEST
+
 #include "../cpp_streams/cpp_streams.hpp"
 
 int main()
@@ -22,16 +25,18 @@ int main()
 
   int ints[] = {3,1,4,1,5};
 
-  auto sum =
+  auto r =
         from_array (ints)
-    >>  to_sum ()
+    >>  filter ([] (auto && v) { return v % 2 == 0; })
+    >>  to_fold (6, [] (auto && s, auto && v) { return s + v; })
     ;
 
-  std::cout << sum << std::endl;
+  std::cout << r << std::endl;
 
   return 0;
 }
-/*
+#else
+
 #include "functional_tests.hpp"
 
 int main()
@@ -42,4 +47,4 @@ int main()
   return 0;
 }
 
-*/
+#endif
