@@ -142,6 +142,9 @@ namespace cpp_streams
     template<typename T>
     using get_source_value_type_t = typename get_source_value_type<T>::type;
 
+    template<typename T>
+    using get_stripped_source_value_type_t = strip_type_t<typename get_source_value_type<T>::type>;
+
     // ------------------------------------------------------------------------
 
     template<typename TOtherSource>
@@ -590,7 +593,7 @@ namespace cpp_streams
       [] (auto && source)
       {
         // WORKAROUND: For some reason 'using' doesn't work here in VS2015 RC
-        typedef detail::strip_type_t<detail::get_source_value_type_t<decltype (source)>> value_type;
+        typedef detail::get_stripped_source_value_type_t<decltype (source)> value_type;
 
         value_type result;
 
@@ -650,7 +653,7 @@ namespace cpp_streams
       [] (auto && source)
       {
         // WORKAROUND: For some reason 'using' doesn't work here in VS2015 RC
-        typedef detail::strip_type_t<detail::get_source_value_type_t<decltype (source)>> value_type;
+        typedef detail::get_stripped_source_value_type_t<decltype (source)> value_type;
 
         value_type result;
 
@@ -673,18 +676,16 @@ namespace cpp_streams
       [] (auto && source)
       {
         // WORKAROUND: For some reason 'using' doesn't work here in VS2015 RC
-        typedef detail::strip_type_t<detail::get_source_value_type_t<decltype (source)>> value_type;
+        typedef detail::get_stripped_source_value_type_t<decltype (source)> value_type;
 
         value_type result {};
 
-        auto sink =
+        source.source_function (
           [&result] (auto && v)
           {
             result += std::forward<decltype (v)> (v);
             return true;
-          };
-
-        source.source_function (sink);
+          });
 
         return result;
       };
@@ -697,11 +698,11 @@ namespace cpp_streams
     return
       [] (auto && source)
       {
-        using value_type = detail::strip_type_t<detail::get_source_value_type_t<decltype (source)>>;
+        using value_type = detail::get_stripped_source_value_type_t<decltype (source)>;
 
         std::vector<value_type> result;
 
-        source.source (
+        source.source_function (
           [&result] (auto && v)
           {
             result.push_back (std::forward<decltype (v)> (v));
