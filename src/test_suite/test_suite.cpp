@@ -27,9 +27,10 @@ int main()
 
   auto r =
         from_array (ints)
-//    >>  filter ([] (auto && v) { return v % 2 == 0; })
-//    >>  to_fold (6, [] (auto && s, auto && v) { return s + v; })
-    >>  to_sum ()
+    >>  filter ([] (auto && v) { return v % 2 == 0; })
+    >>  to_fold (1, [] (auto && s, auto && v) { return s * v; })
+//    >>  to_vector ()
+//    >>  to_sum ()
     ;
 
   std::cout << r << std::endl;

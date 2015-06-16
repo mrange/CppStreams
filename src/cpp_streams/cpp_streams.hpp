@@ -142,8 +142,15 @@ namespace cpp_streams
     template<typename T>
     using get_source_value_type_t = typename get_source_value_type<T>::type;
 
+    // WORKAROUND: A using alias should be enough but causes problems in VS2015 RC
     template<typename T>
-    using get_stripped_source_value_type_t = strip_type_t<typename get_source_value_type<T>::type>;
+    struct get_stripped_source_value_type
+    {
+      using type = typename strip_type<typename get_source_value_type<T>::type>::type;
+    };
+
+    template<typename T>
+    using get_stripped_source_value_type_t = typename get_stripped_source_value_type<T>::type;
 
     // ------------------------------------------------------------------------
 
@@ -539,9 +546,29 @@ namespace cpp_streams
   // --------------------------------------------------------------------------
 
   template<typename TPredicate>
-  CPP_STREAMS__PRELUDE auto filter (TPredicate predicate)
+  CPP_STREAMS__PRELUDE auto filter (TPredicate && predicate)
   {
-    return detail::filter_pipe<TPredicate> (std::move (predicate));
+    return
+      [predicate = std::forward<TPredicate> (predicate)] (auto && source)
+      {
+        typedef detail::get_source_value_type_t<decltype (source)> value_type;
+
+        return detail::adapt_source<value_type> (
+          [predicate = std::forward<TPredicate> (predicate), source = std::forward<TSource> (source)] (auto && sink)
+          {
+            source ([&predicate, &sink] (auto && v)
+            {
+              if (predicate (v))
+              {
+                return sink (std::forward<decltype (v)> (v));
+              }
+              else
+              {
+                return true;
+              }
+            });
+          });
+      };
   }
 
   // --------------------------------------------------------------------------
@@ -593,9 +620,11 @@ namespace cpp_streams
       [] (auto && source)
       {
         // WORKAROUND: For some reason 'using' doesn't work here in VS2015 RC
+        //  Interestingly enough it's not needed in to_last_or_default
+        //  Seems order dependent
         typedef detail::get_stripped_source_value_type_t<decltype (source)> value_type;
 
-        value_type result;
+        value_type result {};
 
         source.source_function (
           [&result] (auto && v)
@@ -652,10 +681,9 @@ namespace cpp_streams
     return
       [] (auto && source)
       {
-        // WORKAROUND: For some reason 'using' doesn't work here in VS2015 RC
-        typedef detail::get_stripped_source_value_type_t<decltype (source)> value_type;
+        using value_type = detail::get_stripped_source_value_type_t<decltype (source)>;
 
-        value_type result;
+        value_type result {};
 
         source.source_function (
           [&result] (auto && v)
@@ -675,8 +703,7 @@ namespace cpp_streams
     return
       [] (auto && source)
       {
-        // WORKAROUND: For some reason 'using' doesn't work here in VS2015 RC
-        typedef detail::get_stripped_source_value_type_t<decltype (source)> value_type;
+        using value_type = detail::get_stripped_source_value_type_t<decltype (source)>;
 
         value_type result {};
 
