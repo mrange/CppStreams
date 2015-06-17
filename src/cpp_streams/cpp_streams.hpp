@@ -18,7 +18,7 @@
 // ----------------------------------------------------------------------------
 # define CPP_STREAMS__CHECK_SOURCE(src)               \
   static_assert(                                      \
-      detail::is_source_adapter<decltype(src)>::value \
+      detail::is_source<decltype(src)>::value         \
     , #src " must be a a cpp_streams source"          \
     )
 # define CPP_STREAMS__PRELUDE constexpr
@@ -74,20 +74,20 @@ namespace cpp_streams
     // ------------------------------------------------------------------------
 
     template<typename TValueType, typename TSourceFunction>
-    struct source_adapter
+    struct source
     {
       using value_type = TValueType;
 
       TSourceFunction source_function;
 
-      CPP_STREAMS__BODY (source_adapter);
+      CPP_STREAMS__BODY (source);
 
-      explicit CPP_STREAMS__PRELUDE source_adapter (TSourceFunction const & source_function)
+      explicit CPP_STREAMS__PRELUDE source (TSourceFunction const & source_function)
         : source_function (source_function)
       {
       }
 
-      explicit CPP_STREAMS__PRELUDE source_adapter (TSourceFunction && source_function)
+      explicit CPP_STREAMS__PRELUDE source (TSourceFunction && source_function)
         : source_function (std::move (source_function))
       {
       }
@@ -100,14 +100,14 @@ namespace cpp_streams
     };
 
     // Adapts a source function into a Source
-    template<typename TValueType, typename TSource>
-    CPP_STREAMS__PRELUDE auto adapt_source (TSource && source)
+    template<typename TValueType, typename TSourceFunction>
+    CPP_STREAMS__PRELUDE auto adapt_source_function (TSourceFunction && source_function)
     {
-      return source_adapter<TValueType, TSource> (std::forward<TSource> (source));
+      return source<TValueType, TSourceFunction> (std::forward<TSourceFunction> (source_function));
     }
 
     template<typename T>
-    struct is_source_adapter_impl
+    struct is_source_impl
     {
       enum
       {
@@ -116,7 +116,7 @@ namespace cpp_streams
     };
 
     template<typename TValueType, typename TSource>
-    struct is_source_adapter_impl<source_adapter<TValueType, TSource>>
+    struct is_source_impl<source<TValueType, TSource>>
     {
       enum
       {
@@ -125,11 +125,11 @@ namespace cpp_streams
     };
 
     template<typename T>
-    struct is_source_adapter
+    struct is_source
     {
       enum
       {
-        value = is_source_adapter_impl<strip_type_t<T>>::value,
+        value = is_source_impl<strip_type_t<T>>::value,
       };
     };
 
@@ -137,7 +137,7 @@ namespace cpp_streams
     struct get_source_value_type_impl;
 
     template<typename TValueType, typename TSource>
-    struct get_source_value_type_impl<source_adapter<TValueType, TSource>>
+    struct get_source_value_type_impl<source<TValueType, TSource>>
     {
       using type = TValueType;
     };
@@ -175,7 +175,7 @@ namespace cpp_streams
     using end_type    = decltype (end);
     using value_type  = decltype (*begin);
 
-    return detail::adapt_source<value_type> (
+    return detail::adapt_source_function<value_type> (
       [begin = std::forward<begin_type> (begin), end = std::forward<end_type> (end)] (auto && sink)
       {
         for (auto iter = begin; iter != end && sink (*iter); ++iter)
@@ -208,7 +208,7 @@ namespace cpp_streams
   template<typename TValue>
   CPP_STREAMS__PRELUDE auto from_empty ()
   {
-    return detail::adapt_source<TValue> (
+    return detail::adapt_source_function<TValue> (
       [] (auto &&)
       {
       });
@@ -220,7 +220,7 @@ namespace cpp_streams
   {
     using value_type = decltype (value);
 
-    return detail::adapt_source<value_type> (
+    return detail::adapt_source_function<value_type> (
       [count, value = std::forward<value_type> (value)] (auto && sink)
       {
         for (auto iter = 0U; iter < count && sink (value); ++iter)
@@ -265,7 +265,7 @@ namespace cpp_streams
 
         static_assert (std::is_convertible<other_value_type, value_type>::value, "TOtherSource values must be convertible into a TSource value");
 
-        return detail::adapt_source<value_type> (
+        return detail::adapt_source_function<value_type> (
           [other_source = other_source, source = std::forward<source_type> (source)] (auto && sink)
           {
             source.source_function ([&sink] (auto && v)
@@ -304,7 +304,7 @@ namespace cpp_streams
         using inner_source_type = std::result_of_t<collector_type (value_type)>     ;
         using inner_value_type  = detail::get_source_value_type_t<inner_source_type>;
 
-        return detail::adapt_source<inner_value_type> (
+        return detail::adapt_source_function<inner_value_type> (
           [collector, source = std::forward<source_type> (source)] (auto && sink)
           {
             source.source_function ([&collector, &sink] (auto && v)
@@ -345,7 +345,7 @@ namespace cpp_streams
         using source_type = decltype (source)                           ;
         using value_type  = detail::get_source_value_type_t<source_type>;
 
-        return detail::adapt_source<value_type> (
+        return detail::adapt_source_function<value_type> (
           [tester, source = std::forward<source_type> (source)] (auto && sink)
           {
             source.source_function ([&tester, &sink] (auto && v)
@@ -386,7 +386,7 @@ namespace cpp_streams
         using value_type      = detail::get_source_value_type_t<source_type>;
         using map_value_type  = std::result_of_t<mapper_type (value_type)>  ;
 
-        return detail::adapt_source<map_value_type> (
+        return detail::adapt_source_function<map_value_type> (
           [mapper, source = std::forward<source_type> (source)] (auto && sink)
           {
             source.source_function ([&mapper, &sink] (auto && v)
@@ -420,7 +420,7 @@ namespace cpp_streams
         using value_type      = detail::get_source_value_type_t<source_type>            ;
         using map_value_type  = std::result_of_t<mapper_type (std::size_t, value_type)> ;
 
-        return detail::adapt_source<map_value_type> (
+        return detail::adapt_source_function<map_value_type> (
           [mapper, source = std::forward<source_type> (source)] (auto && sink)
           {
             std::size_t iter = 0U;
@@ -444,7 +444,7 @@ namespace cpp_streams
       using value_type          = detail::get_source_value_type_t<source_type>          ;
       using stripped_value_type = detail::get_stripped_source_value_type_t<source_type> ;
 
-      return detail::adapt_source<value_type> (
+      return detail::adapt_source_function<value_type> (
         [source = std::forward<source_type> (source)] (auto && sink)
         {
           std::vector<stripped_value_type> result;
@@ -475,7 +475,7 @@ namespace cpp_streams
         using source_type = decltype (source)                           ;
         using value_type  = detail::get_source_value_type_t<source_type>;
 
-        return detail::adapt_source<value_type> (
+        return detail::adapt_source_function<value_type> (
           [skipper, source = std::forward<source_type> (source)] (auto && sink)
           {
             auto do_skip = true;
@@ -513,7 +513,7 @@ namespace cpp_streams
         using source_type = decltype (source)                           ;
         using value_type  = detail::get_source_value_type_t<source_type>;
 
-        return detail::adapt_source<value_type> (
+        return detail::adapt_source_function<value_type> (
           [taker, source = std::forward<source_type> (source)] (auto && sink)
           {
             source.source_function ([&taker, &sink] (auto && v)
