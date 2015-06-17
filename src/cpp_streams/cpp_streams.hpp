@@ -241,39 +241,6 @@ namespace cpp_streams
     // ------------------------------------------------------------------------
 
     template<typename TPredicate>
-    struct map_pipe
-    {
-      TPredicate  predicate ;
-
-      template<typename TValue>
-      static TValue get_value ();
-
-      CPP_STREAMS__BODY (map_pipe);
-
-      explicit CPP_STREAMS__PRELUDE map_pipe (TPredicate predicate)
-        : predicate (std::move (predicate))
-      {
-      }
-
-      template<typename TValueType, typename TSource>
-      CPP_STREAMS__PRELUDE auto consume (TSource && source) const
-      {
-        using value_type = decltype (predicate (get_value<TValueType> ()));
-
-        return adapt_source<value_type> (
-          [this, predicate = predicate, source = std::forward<TSource> (source)] (auto && sink)
-          {
-            source ([&predicate, &sink] (auto && v)
-            {
-              return sink (predicate (std::forward<decltype (v)> (v)));
-            });
-          });
-      }
-    };
-
-    // ------------------------------------------------------------------------
-
-    template<typename TPredicate>
     struct mapi_pipe
     {
       TPredicate  predicate ;
