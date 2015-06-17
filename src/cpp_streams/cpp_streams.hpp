@@ -434,7 +434,9 @@ namespace cpp_streams
   template<typename TIterator>
   CPP_STREAMS__PRELUDE auto from_iterators (TIterator begin, TIterator end)
   {
-    return detail::adapt_source<decltype (*begin)> (
+    using value_type = decltype (*begin);
+
+    return detail::adapt_source<value_type> (
       [begin = std::move (begin), end = std::move (end)] (auto && sink)
       {
         for (auto iter = begin; iter != end && sink (*iter); ++iter)
@@ -520,10 +522,11 @@ namespace cpp_streams
       //  Specifying a capture-default didn't help
       [predicate] (auto && source)
       {
-        using value_type = detail::get_source_value_type_t<decltype (source)>;
+        using source_type = decltype (source);
+        using value_type  = detail::get_source_value_type_t<source_type>;
 
         return detail::adapt_source<value_type> (
-          [predicate, source = std::forward<decltype (source)> (source)] (auto && sink)
+          [predicate, source = std::forward<source_type> (source)] (auto && sink)
           {
             source.source_function ([&predicate, &sink] (auto && v)
             {
@@ -548,6 +551,7 @@ namespace cpp_streams
     // WORKAROUND: G++ gets confused by decltype (predicate) inside the lambda
     //  when deducing map_value_type
     using predicate_type = decltype (predicate);
+
     return
       // WORKAROUND: perfect forwarding would be preferable but clang++ & g++
       //  complains:
@@ -555,11 +559,12 @@ namespace cpp_streams
       //  Specifying a capture-default didn't help
       [predicate] (auto && source)
       {
-        using value_type      = detail::get_source_value_type_t<decltype (source)>  ;
+        using source_type     = decltype (source);
+        using value_type      = detail::get_source_value_type_t<source_type>   ;
         using map_value_type  = std::result_of_t<predicate_type (value_type)> ;
 
         return detail::adapt_source<map_value_type> (
-          [predicate, source = std::forward<decltype (source)> (source)] (auto && sink)
+          [predicate, source = std::forward<source_type> (source)] (auto && sink)
           {
             source.source_function ([&predicate, &sink] (auto && v)
             {
@@ -609,10 +614,11 @@ namespace cpp_streams
     return
       [] (auto && source)
       {
+        using source_type = decltype (source);
         // WORKAROUND: For some reason 'using' doesn't work here in VS2015 RC
         //  Interestingly enough it's not needed in to_last_or_default
         //  Seems order dependent
-        typedef detail::get_stripped_source_value_type_t<decltype (source)> value_type;
+        typedef detail::get_stripped_source_value_type_t<source_type> value_type;
 
         value_type result {};
 
@@ -671,7 +677,8 @@ namespace cpp_streams
     return
       [] (auto && source)
       {
-        using value_type = detail::get_stripped_source_value_type_t<decltype (source)>;
+        using source_type= decltype (source);
+        using value_type = detail::get_stripped_source_value_type_t<source_type>;
 
         value_type result {};
 
@@ -693,7 +700,8 @@ namespace cpp_streams
     return
       [] (auto && source)
       {
-        using value_type = detail::get_stripped_source_value_type_t<decltype (source)>;
+        using source_type= decltype (source);
+        using value_type = detail::get_stripped_source_value_type_t<source_type>;
 
         value_type result {};
 
@@ -715,7 +723,8 @@ namespace cpp_streams
     return
       [] (auto && source)
       {
-        using value_type = detail::get_stripped_source_value_type_t<decltype (source)>;
+        using source_type= decltype (source);
+        using value_type = detail::get_stripped_source_value_type_t<source_type>;
 
         std::vector<value_type> result;
 

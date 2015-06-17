@@ -18,6 +18,7 @@
 #ifdef TEST
 
 #include <string>
+#include <vector>
 
 #include "../cpp_streams/cpp_streams.hpp"
 
@@ -26,14 +27,20 @@ int main()
   using namespace cpp_streams;
 
   int ints[] = {3,1,4,1,5};
+  std::vector<std::string> strings
+  {
+    "Hello" ,
+    "There" ,
+  };
 
-  std::string r =
-        from_array (ints)
-    >>  filter ([] (auto && v) { return v % 2 == 0; })
-    >>  map ([] (auto && v) { return std::to_string (v); })
+  auto r =
+        from (strings)
+    >>  filter ([] (auto && v) { return !v.empty () })
+//    >>  filter ([] (auto && v) { return v % 2 == 0; })
+//    >>  map ([] (auto && v) { return std::to_string (v); })
 //    >>  to_fold (1, [] (auto && s, auto && v) { return s * v; })
 //    >>  to_vector ()
-    >>  to_first_or_default ()
+    >>  to_last_or_default ()
     ;
 
   std::cout << r << std::endl;
