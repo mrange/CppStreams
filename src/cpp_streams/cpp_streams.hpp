@@ -227,21 +227,6 @@ namespace cpp_streams
       {
         using value_type = strip_type_t<TValueType>;
 
-        return adapt_source<value_type> (
-          [this, predicate = predicate, source = std::forward<TSource> (source)] (auto && sink)
-          {
-            source ([&predicate, &sink] (auto && v)
-            {
-              if (predicate (v))
-              {
-                return sink (std::forward<decltype (v)> (v));
-              }
-              else
-              {
-                return false;
-              }
-            });
-          });
       }
     };
 
@@ -536,11 +521,35 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
-  template<typename TPredicate>
-  CPP_STREAMS__PRELUDE auto take_while (TPredicate predicate)
+  auto take_while = [] (auto && taker)
   {
-    return detail::take_while_pipe<TPredicate> (std::move (predicate));
-  }
+    return
+      // WORKAROUND: perfect forwarding preferable
+      [taker] (auto && source)
+      {
+        CPP_STREAMS__CHECK_SOURCE(source);
+
+        using source_type = decltype (source)                           ;
+        using value_type  = detail::get_source_value_type_t<source_type>;
+
+        return detail::adapt_source<value_type> (
+          [taker, source = std::forward<source_type> (source)] (auto && sink)
+          {
+            source.source_function ([&taker, &sink] (auto && v)
+            {
+              if (taker (v))
+              {
+                return sink (std::forward<decltype (v)> (v));
+              }
+              else
+              {
+                return false;
+              }
+            });
+          });
+      };
+  };
+
 
   // --------------------------------------------------------------------------
   // Sinks
