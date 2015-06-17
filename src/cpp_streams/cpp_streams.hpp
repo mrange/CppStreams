@@ -428,8 +428,8 @@ namespace cpp_streams
     using array_type = decltype (arr);
 
     // WORKAROUND
-    static_assert (std::is_array<array_type>::value, "arr must be a C-Style array");
-    
+    // static_assert (std::is_array<array_type>::value, "arr must be a C-Style array");
+
     return from_iterators (arr, arr + std::extent<array_type, 0>::value);
   };
 
@@ -670,7 +670,7 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
-  auto to_sum = 
+  auto to_sum =
     [] (auto && source)
     {
       using source_type= decltype (source);
