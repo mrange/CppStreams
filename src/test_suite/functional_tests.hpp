@@ -923,7 +923,6 @@ namespace functional_tests
 
   }
 
-  /*
   void test__example ()
   {
     CPP_STREAMS__TEST ();
@@ -937,7 +936,7 @@ namespace functional_tests
           from (ints)
       >>  filter ([] (auto && v) {return v % 2 == 0;})  // Keep only even numbers
       >>  map ([] (auto && v) {return v + 1;})          // +1
-      >>  to_sum                                     // Compute sum
+      >>  to_sum                                        // Compute sum
       ;
 
     std::cout << "SUM: " << sum << std::endl;
@@ -975,10 +974,8 @@ namespace functional_tests
 // TODO: Investigate how to test negative tests case like below
 //    >>  map ([] (auto && v) {return v + 1;})
     >>  to_iter ([] (auto && v) { v += 1; return true; });
-
-    CPP_STREAMS__ERROR ("Yello");
   }
-*/
+
   void run_functional_tests ()
   {
     std::cout
@@ -1007,9 +1004,9 @@ namespace functional_tests
     test__to_iter             ();
     test__to_fold             ();
 
-    //test__example             ();
-    //test__basic ();
-    //test__mutating ();
+    // test__example             ();
+    // test__basic               ();
+    // test__mutating            ();
 
 
     if (errors_detected > 0)
@@ -1059,7 +1056,7 @@ namespace functional_tests
 
     return ints;
   }
-/*
+
   void performance__simple_pipe_line (int outer, int inner)
   {
     CPP_STREAMS__TEST ();
@@ -1118,9 +1115,8 @@ namespace functional_tests
       ;
 
     performance__simple_pipe_line     (100000, 10000);
-
   }
-*/
+
 }
 // ----------------------------------------------------------------------------
 #endif // CPP_STREAMS__FUNCTIONAL_TESTS__INCLUDE_GUARD

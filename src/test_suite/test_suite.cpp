@@ -19,7 +19,7 @@
 int main()
 {
   functional_tests::run_functional_tests ();
-//  functional_tests::run_performance_tests ();
+  functional_tests::run_performance_tests ();
 
   return 0;
 }
