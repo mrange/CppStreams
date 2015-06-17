@@ -250,40 +250,6 @@ namespace cpp_streams
     // ------------------------------------------------------------------------
 
     template<typename TPredicate>
-    struct mapi_pipe
-    {
-      TPredicate  predicate ;
-
-      template<typename TValue>
-      static TValue get_value ();
-
-      CPP_STREAMS__BODY (mapi_pipe);
-
-      explicit CPP_STREAMS__PRELUDE mapi_pipe (TPredicate predicate)
-        : predicate (std::move (predicate))
-      {
-      }
-
-      template<typename TValueType, typename TSource>
-      CPP_STREAMS__PRELUDE auto consume (TSource && source) const
-      {
-        using value_type = decltype (predicate (0U, get_value<TValueType> ()));
-
-        return adapt_source<value_type> (
-          [this, predicate = predicate, source = std::forward<TSource> (source)] (auto && sink)
-          {
-            std::size_t iter = 0U;
-            source ([&iter, &predicate, &sink] (auto && v)
-            {
-              return sink (predicate (iter++, std::forward<decltype (v)> (v)));
-            });
-          });
-      }
-    };
-
-    // ------------------------------------------------------------------------
-
-    template<typename TPredicate>
     struct skip_while_pipe
     {
       TPredicate predicate;
@@ -406,7 +372,6 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
-
   template<typename TValue>
   CPP_STREAMS__PRELUDE auto from_empty ()
   {
@@ -525,13 +490,42 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
-  template<typename TPredicate>
-  CPP_STREAMS__PRELUDE auto mapi (TPredicate predicate)
+  auto mapi = [] (auto && mapper)
   {
-    return detail::mapi_pipe<TPredicate> (std::move (predicate));
-  }
+#ifndef _MSC_VER
+    // WORKAROUND: G++ gets confused with mapper_type declared inside lambda
+    using mapper_type     = decltype (mapper);
+#endif
+
+    return
+      // WORKAROUND: perfect forwarding preferable
+      [mapper] (auto && source)
+      {
+        CPP_STREAMS__CHECK_SOURCE(source);
+
+#ifdef _MSC_VER
+        // WORKAROUND: VS2015 RC ICE:s if mapper_type is put in outer scope
+        using mapper_type     = decltype (mapper);
+#endif
+        using source_type     = decltype (source);
+        using value_type      = detail::get_source_value_type_t<source_type>   ;
+        using map_value_type  = std::result_of_t<mapper_type (std::size_t, value_type)> ;
+
+        return detail::adapt_source<map_value_type> (
+          [mapper, source = std::forward<source_type> (source)] (auto && sink)
+          {
+            std::size_t iter = 0U;
+
+            source.source_function ([&iter, &mapper, &sink] (auto && v)
+            {
+              return sink (mapper (iter++, std::forward<decltype (v)> (v)));
+            });
+          });
+      };
+  };
 
   // --------------------------------------------------------------------------
+  // WORKAROUND: Find VS2015 RC workaround
   auto reverse =
     [] (auto && source)
     {
