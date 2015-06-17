@@ -239,7 +239,7 @@ namespace functional_tests
 
     {
       int expected  = 8;
-      int actual    = from_array (ints) >> to_sum ();
+      int actual    = from_array (ints) >> to_sum;
       CPP_STREAMS__EQUAL (expected, actual);
     }
 
@@ -255,7 +255,7 @@ namespace functional_tests
       std::vector<user> expected  = empty_users;
       std::vector<user> actual    =
             from_repeat (empty_user, 0U)
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -264,7 +264,7 @@ namespace functional_tests
       std::vector<int> expected  {3,3,3};
       std::vector<int> actual    =
             from_repeat (3, 3U)
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -281,7 +281,7 @@ namespace functional_tests
       std::vector<user> expected  { some_users[0] };
       std::vector<user> actual    =
             from_singleton (some_users[0])
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -298,7 +298,7 @@ namespace functional_tests
       std::vector<user> expected  {};
       std::vector<user> actual    =
             from_empty<user> ()
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -313,13 +313,13 @@ namespace functional_tests
 
     {
       user expected = empty_user;
-      user actual   = from (empty_users) >> to_first_or_default ();
+      user actual   = from (empty_users) >> to_first_or_default;
       CPP_STREAMS__EQUAL (expected, actual);
     }
 
     {
       int expected  = some_ints.front ();
-      int actual    = from (some_ints) >> to_first_or_default ();
+      int actual    = from (some_ints) >> to_first_or_default;
       CPP_STREAMS__EQUAL (expected, actual);
     }
   }
@@ -332,13 +332,13 @@ namespace functional_tests
 
     {
       user expected   = empty_user;
-      user actual     = from (empty_users) >> to_last_or_default ();
+      user actual     = from (empty_users) >> to_last_or_default;
       CPP_STREAMS__EQUAL (expected, actual);
     }
 
     {
       int expected    = some_ints.back ();
-      int actual      = from (some_ints) >> to_last_or_default ();
+      int actual      = from (some_ints) >> to_last_or_default;
       CPP_STREAMS__EQUAL (expected, actual);
     }
   }
@@ -351,13 +351,13 @@ namespace functional_tests
 
     {
       int expected  = 0;
-      int actual    = from (empty_ints) >> to_sum ();
+      int actual    = from (empty_ints) >> to_sum;
       CPP_STREAMS__EQUAL (expected, actual);
     }
 
     {
       int expected  = compute_sum (some_ints, identity);
-      int actual    = from (some_ints) >> to_sum ();
+      int actual    = from (some_ints) >> to_sum;
       CPP_STREAMS__EQUAL (expected, actual);
     }
   }
@@ -370,13 +370,13 @@ namespace functional_tests
 
     {
       std::vector<int> expected = empty_ints;
-      std::vector<int> actual   = from (empty_ints) >> to_vector ();
+      std::vector<int> actual   = from (empty_ints) >> to_vector;
       CPP_STREAMS__EQUAL (expected, actual);
     }
 
     {
       std::vector<user> expected  = some_users;
-      std::vector<user> actual    = from (some_users) >> to_vector ();
+      std::vector<user> actual    = from (some_users) >> to_vector;
       CPP_STREAMS__EQUAL (expected, actual);
     }
   }
@@ -463,6 +463,7 @@ namespace functional_tests
 
   }
 
+/*
   void test__append ()
   {
     CPP_STREAMS__TEST ();
@@ -474,7 +475,7 @@ namespace functional_tests
       std::vector<int> actual   =
             from (empty_ints)
         >>  append (from (empty_ints))
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -484,7 +485,7 @@ namespace functional_tests
       std::vector<user> actual   =
             from (some_users)
         >>  append (from (empty_users))
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -494,7 +495,7 @@ namespace functional_tests
       std::vector<int> actual   =
             from (empty_ints)
         >>  append (from (some_ints))
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -511,7 +512,7 @@ namespace functional_tests
       std::vector<user> actual   =
             from (some_users)
         >>  append (from (some_users))
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -532,7 +533,7 @@ namespace functional_tests
       std::vector<int>  actual    =
             from (empty_users)
         >>  collect (collect_simple)
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -542,7 +543,7 @@ namespace functional_tests
       std::vector<int>  actual    =
             from_singleton (some_users[0])
         >>  collect (collect_simple)
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -551,12 +552,12 @@ namespace functional_tests
       std::vector<std::string>  expected  =
             from (some_users[0].lottery_numbers)
         >>  map (map_tostring)
-        >> to_vector ()
+        >> to_vector
         ;
       std::vector<std::string>  actual    =
             from_singleton (some_users[0])
         >>  collect (collect_advanced)
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -586,7 +587,7 @@ namespace functional_tests
       std::vector<int>  actual    =
             from (some_users)
         >>  collect (collect_simple)
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -596,7 +597,7 @@ namespace functional_tests
       std::vector<std::string>  actual    =
             from (some_users)
         >>  collect (collect_advanced)
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -632,7 +633,7 @@ namespace functional_tests
       std::vector<int> actual   =
             from (empty_ints)
         >>  filter (filter_int)
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -642,7 +643,7 @@ namespace functional_tests
       std::vector<int> actual   =
             from (some_ints)
         >>  filter (filter_int)
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -652,7 +653,7 @@ namespace functional_tests
       std::vector<user> actual    =
             from (some_users)
         >>  filter (filter_user)
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -687,7 +688,7 @@ namespace functional_tests
       std::vector<std::string> actual   =
             from (empty_ints)
         >>  map (map_int)
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -697,7 +698,7 @@ namespace functional_tests
       std::vector<std::string> actual   =
             from (some_ints)
         >>  map (map_int)
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -707,7 +708,7 @@ namespace functional_tests
       std::vector<std::uint64_t> actual   =
             from (some_users)
         >>  map (map_user)
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -747,7 +748,7 @@ namespace functional_tests
       std::vector<std::tuple<std::size_t, std::string>> actual   =
             from (empty_ints)
         >>  mapi (mapi_int)
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -757,7 +758,7 @@ namespace functional_tests
       std::vector<std::tuple<std::size_t, std::string>> actual   =
             from (some_ints)
         >>  mapi (mapi_int)
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -767,7 +768,7 @@ namespace functional_tests
       std::vector<std::tuple<std::size_t, std::uint64_t>> actual   =
             from (some_users)
         >>  mapi (mapi_user)
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -798,7 +799,7 @@ namespace functional_tests
       std::vector<int> actual   =
             from (empty_ints)
         >>  reverse ()
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -808,7 +809,7 @@ namespace functional_tests
       std::vector<int> actual   =
             from (some_ints)
         >>  reverse ()
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -818,7 +819,7 @@ namespace functional_tests
       std::vector<user> actual   =
             from (some_users)
         >>  reverse ()
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -836,7 +837,7 @@ namespace functional_tests
       std::vector<int>  actual   =
             from (some_ints)
         >>  skip_while ([] (auto &&) { return true; })
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -846,7 +847,7 @@ namespace functional_tests
       std::vector<int>  actual   =
             from (empty_ints)
         >>  skip_while ([] (auto &&) { return false; })
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -856,7 +857,7 @@ namespace functional_tests
       std::vector<user> actual   =
             from (some_users)
         >>  skip_while ([] (auto &&) { return false; })
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -866,7 +867,7 @@ namespace functional_tests
       std::vector<int>  actual   =
             from (some_ints)
         >>  skip_while ([] (auto && v) { return v < 9; })
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -884,7 +885,7 @@ namespace functional_tests
       std::vector<int>  actual   =
             from (some_ints)
         >>  take_while ([] (auto &&) { return false; })
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -894,7 +895,7 @@ namespace functional_tests
       std::vector<int>  actual   =
             from (empty_ints)
         >>  take_while ([] (auto &&) { return true; })
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -904,7 +905,7 @@ namespace functional_tests
       std::vector<user> actual   =
             from (some_users)
         >>  take_while ([] (auto &&) { return true; })
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -914,7 +915,7 @@ namespace functional_tests
       std::vector<int>  actual   =
             from (some_ints)
         >>  take_while ([] (auto && v) { return v < 5; })
-        >>  to_vector ()
+        >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
@@ -934,7 +935,7 @@ namespace functional_tests
           from (ints)
       >>  filter ([] (auto && v) {return v % 2 == 0;})  // Keep only even numbers
       >>  map ([] (auto && v) {return v + 1;})          // +1
-      >>  to_sum ()                                     // Compute sum
+      >>  to_sum                                     // Compute sum
       ;
 
     std::cout << "SUM: " << sum << std::endl;
@@ -954,9 +955,9 @@ namespace functional_tests
 //      >>  map ([] (auto && v) {return std::to_string (v);})
       ;
 
-    std::cout << "SUM: " << (query >> to_sum ()) << std::endl;
-    std::cout << "FIRST: " << (query >> to_first_or_default ()) << std::endl;
-    std::cout << "LAST: " << (query >> to_last_or_default ()) << std::endl;
+    std::cout << "SUM: " << (query >> to_sum) << std::endl;
+    std::cout << "FIRST: " << (query >> to_first_or_default) << std::endl;
+    std::cout << "LAST: " << (query >> to_last_or_default) << std::endl;
   }
 
   void test__mutating ()
@@ -975,7 +976,7 @@ namespace functional_tests
 
     CPP_STREAMS__ERROR ("Yello");
   }
-
+*/
   void run_functional_tests ()
   {
     std::cout
@@ -987,7 +988,7 @@ namespace functional_tests
     test__from_repeat         ();
     test__from_singleton      ();
     test__from_empty          ();
-
+/*
     test__append              ();
     test__collect             ();
     test__filter              ();
@@ -996,7 +997,7 @@ namespace functional_tests
     test__reverse             ();
     test__skip_while          ();
     test__take_while          ();
-
+*/
     test__to_first_or_default ();
     test__to_last_or_default  ();
     test__to_sum              ();
@@ -1004,7 +1005,7 @@ namespace functional_tests
     test__to_iter             ();
     test__to_fold             ();
 
-    test__example             ();
+    //test__example             ();
     //test__basic ();
     //test__mutating ();
 
@@ -1056,7 +1057,7 @@ namespace functional_tests
 
     return ints;
   }
-
+/*
   void performance__simple_pipe_line (int outer, int inner)
   {
     CPP_STREAMS__TEST ();
@@ -1072,7 +1073,7 @@ namespace functional_tests
               from (vs)
           >>  filter ([] (auto && v) {return v % 2 == 0;})
           >>  map ([] (auto && v) {return v + 1;})
-          >>  to_sum ()
+          >>  to_sum
           ;
       };
 
@@ -1117,6 +1118,7 @@ namespace functional_tests
     performance__simple_pipe_line     (100000, 10000);
 
   }
+*/
 }
 // ----------------------------------------------------------------------------
 #endif // CPP_STREAMS__FUNCTIONAL_TESTS__INCLUDE_GUARD

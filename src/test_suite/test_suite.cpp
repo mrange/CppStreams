@@ -14,68 +14,12 @@
 
 #include "stdafx.h"
 
-#define TEST
-#ifdef TEST
-
-#include <string>
-#include <vector>
-
-#include "../cpp_streams/cpp_streams.hpp"
-
-int main()
-{
-  using namespace cpp_streams;
-
-  int ints[] = {3,1,4,1,5};
-  std::vector<std::string> strings
-  {
-    "Hello" ,
-    "There!",
-  };
-
-  {
-    auto r =
-          from (strings)
-      >>  filter ([] (auto && v) { return !v.empty (); })
-  //    >>  filter ([] (auto && v) { return v % 2 == 0; })
-      >>  map ([] (auto && v) { return v.size (); })
-  //    >>  to_fold (1, [] (auto && s, auto && v) { return s * v; })
-  //    >>  to_vector ()
-      >>  to_first_or_default
-      ;
-
-    std::cout << r << std::endl;
-  }
-
-  {
-//    auto r =
-          from_array (ints)
-      >>  filter ([] (auto && v) { return v % 2 != 0; })
-//    >>  filter ([] (auto && v) { return v % 2 == 0; })
-//      >>  map ([] (auto && v) { return std::to_string (v); })
-//      >>  to_fold (1, [] (auto && s, auto && v) { return s * v; })
-      >>  to_iter ([] (auto && v) { std::cout << v << std::endl; return true; })
-//    >>  to_vector ()
-//      >>  to_sum
-//      >>  to_sum ()
-      ;
-
-    //std::cout << r << std::endl;
-  }
-
-
-  return 0;
-}
-#else
-
 #include "functional_tests.hpp"
 
 int main()
 {
   functional_tests::run_functional_tests ();
-  functional_tests::run_performance_tests ();
+//  functional_tests::run_performance_tests ();
 
   return 0;
 }
-
-#endif
