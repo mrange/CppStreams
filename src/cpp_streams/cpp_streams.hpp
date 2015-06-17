@@ -244,6 +244,11 @@ namespace cpp_streams
   {
     CPP_STREAMS__CHECK_SOURCE(other_source);
 
+#ifndef _MSC_VER
+    // WORKAROUND: G++ gets confused with other_source_type declared inside lambda
+    using other_source_type = decltype (other_source)                           ;
+#endif
+
     return
       // WORKAROUND: perfect forwarding preferable
       [other_source] (auto && source)
@@ -251,7 +256,10 @@ namespace cpp_streams
         CPP_STREAMS__CHECK_SOURCE(source);
 
         using source_type       = decltype (source)                                 ;
+#ifdef _MSC_VER
+        // WORKAROUND: VS2015 RC ICE:s if other_source_type is put in outer scope
         using other_source_type = decltype (other_source)                           ;
+#endif
         using value_type        = detail::get_source_value_type_t<source_type>      ;
         using other_value_type  = detail::get_source_value_type_t<other_source_type>;
 
@@ -277,14 +285,20 @@ namespace cpp_streams
 
   auto collect = [] (auto && collector)
   {
-
+#ifndef _MSC_VER
+    // WORKAROUND: G++ gets confused with collector_type declared inside lambda
+    using collector_type    = decltype (collector)                              ;
+#endif
     return
       // WORKAROUND: perfect forwarding preferable
       [collector] (auto && source)
       {
         CPP_STREAMS__CHECK_SOURCE(source);
 
+#ifdef _MSC_VER
+        // WORKAROUND: VS2015 RC ICE:s if collector_type is put in outer scope
         using collector_type    = decltype (collector)                              ;
+#endif
         using source_type       = decltype (source)                                 ;
         using value_type        = detail::get_source_value_type_t<source_type>      ;
         using inner_source_type = std::result_of_t<collector_type (value_type)>     ;
