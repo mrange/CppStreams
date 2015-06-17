@@ -615,15 +615,13 @@ namespace cpp_streams
       [] (auto && source)
       {
         using source_type = decltype (source);
-        // WORKAROUND: For some reason 'using' doesn't work here in VS2015 RC
-        //  Interestingly enough it's not needed in to_last_or_default
-        //  Seems order dependent
-        typedef detail::get_stripped_source_value_type_t<source_type> value_type;
+        using value_type = detail::get_stripped_source_value_type_t<source_type>;
 
-        value_type result {};
+        // WORKAROUND: value_type result {} doesn't work in VS2015 RC
+        auto result = value_type ();
 
         source.source_function (
-          [&result] (auto && v)
+          [&] (auto && v)
           {
             result = (std::forward<decltype (v)> (v));
             return false;
@@ -680,7 +678,8 @@ namespace cpp_streams
         using source_type= decltype (source);
         using value_type = detail::get_stripped_source_value_type_t<source_type>;
 
-        value_type result {};
+        // WORKAROUND: value_type result {} doesn't work in VS2015 RC
+        auto result = value_type ();
 
         source.source_function (
           [&result] (auto && v)
@@ -703,7 +702,8 @@ namespace cpp_streams
         using source_type= decltype (source);
         using value_type = detail::get_stripped_source_value_type_t<source_type>;
 
-        value_type result {};
+        // WORKAROUND: value_type result {} doesn't work in VS2015 RC
+        auto result = value_type ();
 
         source.source_function (
           [&result] (auto && v)
@@ -726,7 +726,8 @@ namespace cpp_streams
         using source_type= decltype (source);
         using value_type = detail::get_stripped_source_value_type_t<source_type>;
 
-        std::vector<value_type> result;
+        // WORKAROUND: std::vector<value_type> result {} doesn't work in VS2015 RC
+        auto result = std::vector<value_type> ();
 
         source.source_function (
           [&result] (auto && v)

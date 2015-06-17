@@ -33,17 +33,35 @@ int main()
     "There!",
   };
 
-  auto r =
-        from (strings)
-    >>  filter ([] (auto && v) { return !v.empty (); })
+  {
+    auto r =
+          from (strings)
+      >>  filter ([] (auto && v) { return !v.empty (); })
+  //    >>  filter ([] (auto && v) { return v % 2 == 0; })
+      >>  map ([] (auto && v) { return v.size (); })
+  //    >>  to_fold (1, [] (auto && s, auto && v) { return s * v; })
+  //    >>  to_vector ()
+      >>  to_last_or_default ()
+      ;
+
+    std::cout << r << std::endl;
+  }
+
+  {
+    auto r =
+          from_array (ints)
+//      >>  filter ([] (auto && v) { return v % 2 != 0; })
 //    >>  filter ([] (auto && v) { return v % 2 == 0; })
-    >>  map ([] (auto && v) { return v.size (); })
+      >>  map ([] (auto && v) { return std::to_string (v); })
 //    >>  to_fold (1, [] (auto && s, auto && v) { return s * v; })
 //    >>  to_vector ()
-    >>  to_first_or_default ()
-    ;
+      >>  to_last_or_default ()
+//      >>  to_sum ()
+      ;
 
-  std::cout << r << std::endl;
+    std::cout << r << std::endl;
+  }
+
 
   return 0;
 }
