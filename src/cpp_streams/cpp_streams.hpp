@@ -519,8 +519,6 @@ namespace cpp_streams
 
   auto map = [] (auto && mapper)
   {
-    // WORKAROUND: G++ gets confused by decltype (predicate) inside the lambda
-    //  when deducing map_value_type
     using mapper_type = decltype (mapper);
 
     return
@@ -536,7 +534,7 @@ namespace cpp_streams
           {
             source.source_function ([&mapper, &sink] (auto && v)
             {
-              return sink (predicate (std::forward<decltype (v)> (v)));
+              return sink (mapper (std::forward<decltype (v)> (v)));
             });
           });
       };
@@ -581,7 +579,7 @@ namespace cpp_streams
     [] (auto && source)
     {
       using source_type = decltype (source);
-      using value_type = detail::get_stripped_source_value_type_t<source_type>;
+      using value_type  = detail::get_stripped_source_value_type_t<source_type>;
 
       // WORKAROUND: value_type result {} doesn't work in VS2015 RC
       auto result = value_type ();
@@ -603,9 +601,8 @@ namespace cpp_streams
     using iteration_type  = decltype (iteration);
 
     return
-      [=] (auto && source)
-// WORKAROUND
-// [iteration = std::forward<iteration_type> (iteration)] (auto && source)
+      // WORKAROUND: perfect forwarding preferable
+      [iteration] (auto && source)
       {
         source.source_function (
           [&iteration] (auto && v)
