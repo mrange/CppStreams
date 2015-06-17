@@ -16,6 +16,11 @@
 #ifndef CPP_STREAMS__INCLUDE_GUARD
 # define CPP_STREAMS__INCLUDE_GUARD
 // ----------------------------------------------------------------------------
+# define CPP_STREAMS__CHECK_SOURCE(src)               \
+  static_assert(                                      \
+      detail::is_source_adapter<decltype(src)>::value \
+    , #src " must be a a proper cpp_streams source"   \
+    )
 # define CPP_STREAMS__PRELUDE constexpr
 # define CPP_STREAMS__SINK    inline
 # define CPP_STREAMS__BODY(type)            \
@@ -274,43 +279,6 @@ namespace cpp_streams
 
     // ------------------------------------------------------------------------
 
-    struct reverse_pipe
-    {
-      std::size_t reserve;
-
-      CPP_STREAMS__BODY (reverse_pipe);
-
-      explicit CPP_STREAMS__PRELUDE reverse_pipe (std::size_t reserve)
-        : reserve (reserve)
-      {
-      }
-
-      template<typename TValueType, typename TSource>
-      CPP_STREAMS__PRELUDE auto consume (TSource && source) const
-      {
-        using value_type = strip_type_t<TValueType>;
-
-        return adapt_source<value_type> (
-          [this, reserve = reserve, source = std::forward<TSource> (source)] (auto && sink)
-          {
-            std::vector<value_type> result;
-            result.reserve (reserve);
-
-            source ([&result] (auto && v)
-            {
-              result.push_back (std::forward<decltype (v)> (v));
-              return true;
-            });
-
-            auto iter = result.size ();
-            while (iter != 0 && sink (std::move (result[--iter])))
-              ;
-          });
-      }
-    };
-
-    // ------------------------------------------------------------------------
-
     template<typename TPredicate>
     struct skip_while_pipe
     {
@@ -494,6 +462,8 @@ namespace cpp_streams
       // WORKAROUND: perfect forwarding preferable
       [tester] (auto && source)
       {
+        CPP_STREAMS__CHECK_SOURCE(source);
+
         using source_type = decltype (source);
         using value_type  = detail::get_source_value_type_t<source_type>;
 
@@ -519,11 +489,13 @@ namespace cpp_streams
 
   auto map = [] (auto && mapper)
   {
-
     return
       // WORKAROUND: perfect forwarding preferable
       [mapper] (auto && source)
       {
+        CPP_STREAMS__CHECK_SOURCE(source);
+
+        // WORKAROUND: VS2015 RC ICE:s if mapper_type is put in outer scope
         using mapper_type     = decltype (mapper);
         using source_type     = decltype (source);
         using value_type      = detail::get_source_value_type_t<source_type>   ;
@@ -549,11 +521,31 @@ namespace cpp_streams
   }
 
   // --------------------------------------------------------------------------
+  auto reverse = 
+    [] (auto && source)
+    {
+      CPP_STREAMS__CHECK_SOURCE(source);
 
-  CPP_STREAMS__PRELUDE auto reverse (std::size_t reserve = 16)
-  {
-    return detail::reverse_pipe (reserve);
-  }
+      using source_type = decltype (source);
+      using value_type  = detail::get_source_value_type_t<source_type>;
+
+      return detail::adapt_source<value_type> (
+        [source = std::forward<source_type> (source)] (auto && sink)
+        {
+          std::vector<detail::strip_type_t<value_type>> result;
+          result.reserve (16U);
+
+          source ([&result] (auto && v)
+          {
+            result.push_back (std::forward<decltype (v)> (v));
+            return true;
+          });
+
+          auto iter = result.size ();
+          while (iter != 0 && sink (std::move (result[--iter])))
+            ;
+        });
+    };
 
   // --------------------------------------------------------------------------
 
@@ -578,6 +570,8 @@ namespace cpp_streams
   auto to_first_or_default =
     [] (auto && source)
     {
+      CPP_STREAMS__CHECK_SOURCE(source);
+
       using source_type = decltype (source);
       using value_type  = detail::get_stripped_source_value_type_t<source_type>;
 
@@ -604,6 +598,8 @@ namespace cpp_streams
       // WORKAROUND: perfect forwarding preferable
       [iteration] (auto && source)
       {
+        CPP_STREAMS__CHECK_SOURCE(source);
+
         source.source_function (
           [&iteration] (auto && v)
           {
@@ -622,6 +618,8 @@ namespace cpp_streams
     return
       [initial, folder] (auto && source)
       {
+        CPP_STREAMS__CHECK_SOURCE(source);
+
         auto state = initial;
 
         source.source_function (
@@ -640,6 +638,8 @@ namespace cpp_streams
   auto to_last_or_default =
     [] (auto && source)
     {
+      CPP_STREAMS__CHECK_SOURCE(source);
+
       using source_type= decltype (source);
       using value_type = detail::get_stripped_source_value_type_t<source_type>;
 
@@ -661,6 +661,8 @@ namespace cpp_streams
   auto to_sum =
     [] (auto && source)
     {
+      CPP_STREAMS__CHECK_SOURCE(source);
+
       using source_type= decltype (source);
       using value_type = detail::get_stripped_source_value_type_t<source_type>;
 
@@ -682,6 +684,8 @@ namespace cpp_streams
   auto to_vector =
     [] (auto && source)
     {
+      CPP_STREAMS__CHECK_SOURCE(source);
+
       using source_type= decltype (source);
       using value_type = detail::get_stripped_source_value_type_t<source_type>;
 

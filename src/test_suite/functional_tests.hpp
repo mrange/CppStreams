@@ -776,6 +776,7 @@ namespace functional_tests
     }
 
   }
+  */
 
   void test__reverse ()
   {
@@ -800,7 +801,7 @@ namespace functional_tests
       std::vector<int> expected {};
       std::vector<int> actual   =
             from (empty_ints)
-        >>  reverse ()
+        >>  reverse
         >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
@@ -810,7 +811,7 @@ namespace functional_tests
       std::vector<int> expected = apply_reverse (some_ints);
       std::vector<int> actual   =
             from (some_ints)
-        >>  reverse ()
+        >>  reverse
         >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
@@ -820,7 +821,7 @@ namespace functional_tests
       std::vector<user> expected = apply_reverse (some_users);
       std::vector<user> actual   =
             from (some_users)
-        >>  reverse ()
+        >>  reverse
         >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
@@ -828,6 +829,7 @@ namespace functional_tests
 
   }
 
+  /*
   void test__skip_while ()
   {
     CPP_STREAMS__TEST ();
