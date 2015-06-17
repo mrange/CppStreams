@@ -41,25 +41,26 @@ int main()
       >>  map ([] (auto && v) { return v.size (); })
   //    >>  to_fold (1, [] (auto && s, auto && v) { return s * v; })
   //    >>  to_vector ()
-      >>  to_last_or_default ()
+      >>  to_first_or_default
       ;
 
     std::cout << r << std::endl;
   }
 
   {
-    auto r =
+//    auto r =
           from_array (ints)
-//      >>  filter ([] (auto && v) { return v % 2 != 0; })
+      >>  filter ([] (auto && v) { return v % 2 != 0; })
 //    >>  filter ([] (auto && v) { return v % 2 == 0; })
-      >>  map ([] (auto && v) { return std::to_string (v); })
-//    >>  to_fold (1, [] (auto && s, auto && v) { return s * v; })
+//      >>  map ([] (auto && v) { return std::to_string (v); })
+//      >>  to_fold (1, [] (auto && s, auto && v) { return s * v; })
+      >>  to_iter ([] (auto && v) { std::cout << v << std::endl; return true; })
 //    >>  to_vector ()
-      >>  to_last_or_default ()
+//      >>  to_sum
 //      >>  to_sum ()
       ;
 
-    std::cout << r << std::endl;
+    //std::cout << r << std::endl;
   }
 
 

@@ -576,35 +576,35 @@ namespace cpp_streams
   // Sinks
   // --------------------------------------------------------------------------
 
-  CPP_STREAMS__SINK auto to_first_or_default ()
-  {
-    return
-      [] (auto && source)
-      {
-        using source_type = decltype (source);
-        using value_type = detail::get_stripped_source_value_type_t<source_type>;
+  auto to_first_or_default =
+    [] (auto && source)
+    {
+      using source_type = decltype (source);
+      using value_type = detail::get_stripped_source_value_type_t<source_type>;
 
-        // WORKAROUND: value_type result {} doesn't work in VS2015 RC
-        auto result = value_type ();
+      // WORKAROUND: value_type result {} doesn't work in VS2015 RC
+      auto result = value_type ();
 
-        source.source_function (
-          [&] (auto && v)
-          {
-            result = (std::forward<decltype (v)> (v));
-            return false;
-          });
+      source.source_function (
+        [&] (auto && v)
+        {
+          result = (std::forward<decltype (v)> (v));
+          return false;
+        });
 
-        return result;
-      };
-  }
+      return result;
+    };
 
   // --------------------------------------------------------------------------
 
-  template<typename TIteration>
-  CPP_STREAMS__SINK auto to_iter (TIteration && iteration)
+  auto to_iter = [] (auto && iteration)
   {
+    using iteration_type  = decltype (iteration);
+
     return
-      [iteration = std::forward<TIteration> (iteration)] (auto && source)
+      [=] (auto && source)
+// WORKAROUND
+//      [iteration = std::forward<iteration_type> (iteration)] (auto && source)
       {
         source.source_function (
           [&iteration] (auto && v)
@@ -612,15 +612,19 @@ namespace cpp_streams
             return iteration (v);
           });
       };
-  }
+  };
 
   // --------------------------------------------------------------------------
 
-  template<typename TState, typename TFolder>
-  CPP_STREAMS__PRELUDE auto to_fold (TState && initial, TFolder && folder)
+  auto to_fold = [] (auto && initial, auto && folder)
   {
+    using state_type  = decltype (initial);
+    using folder_type = decltype (folder);
+
     return
-      [initial = std::forward<TState> (initial), folder = std::forward<TFolder> (folder)] (auto && source)
+      [=] (auto && source)
+// WORKAROUND
+//      [initial = std::forward<state_type> (initial), folder = std::forward<folder_type> (folder)] (auto && source)
       {
         auto state = initial;
 
@@ -633,79 +637,70 @@ namespace cpp_streams
 
         return state;
       };
-  }
+  };
 
   // --------------------------------------------------------------------------
 
-  CPP_STREAMS__SINK auto to_last_or_default ()
-  {
-    return
-      [] (auto && source)
-      {
-        using source_type= decltype (source);
-        using value_type = detail::get_stripped_source_value_type_t<source_type>;
+  auto to_last_or_default =
+    [] (auto && source)
+    {
+      using source_type= decltype (source);
+      using value_type = detail::get_stripped_source_value_type_t<source_type>;
 
-        // WORKAROUND: value_type result {} doesn't work in VS2015 RC
-        auto result = value_type ();
+      // WORKAROUND: value_type result {} doesn't work in VS2015 RC
+      auto result = value_type ();
 
-        source.source_function (
-          [&result] (auto && v)
-          {
-            result = (std::forward<decltype (v)> (v));
-            return true;
-          });
+      source.source_function (
+        [&result] (auto && v)
+        {
+          result = (std::forward<decltype (v)> (v));
+          return true;
+        });
 
-        return result;
-      };
-  }
+      return result;
+    };
 
   // --------------------------------------------------------------------------
 
-  CPP_STREAMS__SINK auto to_sum ()
-  {
-    return
-      [] (auto && source)
-      {
-        using source_type= decltype (source);
-        using value_type = detail::get_stripped_source_value_type_t<source_type>;
+  auto to_sum = 
+    [] (auto && source)
+    {
+      using source_type= decltype (source);
+      using value_type = detail::get_stripped_source_value_type_t<source_type>;
 
-        // WORKAROUND: value_type result {} doesn't work in VS2015 RC
-        auto result = value_type ();
+      // WORKAROUND: value_type result {} doesn't work in VS2015 RC
+      auto result = value_type ();
 
-        source.source_function (
-          [&result] (auto && v)
-          {
-            result += std::forward<decltype (v)> (v);
-            return true;
-          });
+      source.source_function (
+        [&result] (auto && v)
+        {
+          result += std::forward<decltype (v)> (v);
+          return true;
+        });
 
-        return result;
-      };
-  }
+      return result;
+    };
 
   // --------------------------------------------------------------------------
 
-  CPP_STREAMS__SINK auto to_vector ()
-  {
-    return
-      [] (auto && source)
-      {
-        using source_type= decltype (source);
-        using value_type = detail::get_stripped_source_value_type_t<source_type>;
+  auto to_vector =
+    [] (auto && source)
+    {
+      using source_type= decltype (source);
+      using value_type = detail::get_stripped_source_value_type_t<source_type>;
 
-        // WORKAROUND: std::vector<value_type> result {} doesn't work in VS2015 RC
-        auto result = std::vector<value_type> ();
+      // WORKAROUND: std::vector<value_type> result {} doesn't work in VS2015 RC
+      auto result = std::vector<value_type> ();
 
-        source.source_function (
-          [&result] (auto && v)
-          {
-            result.push_back (std::forward<decltype (v)> (v));
-            return true;
-          });
+      source.source_function (
+        [&result] (auto && v)
+        {
+          result.push_back (std::forward<decltype (v)> (v));
+          return true;
+        });
 
-        return result;
-      };
-  }
+      return result;
+    };
 
   // --------------------------------------------------------------------------
 
