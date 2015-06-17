@@ -486,25 +486,23 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
-  template<typename TPredicate>
-  CPP_STREAMS__PRELUDE auto filter (TPredicate && predicate)
+  auto filter = [] (auto && tester)
   {
+    using tester_type = decltype (tester);
+
     return
-      // WORKAROUND: perfect forwarding would be preferable but clang++ & g++
-      //  complains:
-      //    variable 'predicate' cannot be implicitly captured in a lambda with no capture-default specified
-      //  Specifying a capture-default didn't help
-      [predicate] (auto && source)
+      // WORKAROUND: perfect forwarding preferable
+      [tester] (auto && source)
       {
         using source_type = decltype (source);
         using value_type  = detail::get_source_value_type_t<source_type>;
 
         return detail::adapt_source<value_type> (
-          [predicate, source = std::forward<source_type> (source)] (auto && sink)
+          [tester, source = std::forward<source_type> (source)] (auto && sink)
           {
-            source.source_function ([&predicate, &sink] (auto && v)
+            source.source_function ([&tester, &sink] (auto && v)
             {
-              if (predicate (v))
+              if (tester (v))
               {
                 return sink (std::forward<decltype (v)> (v));
               }
@@ -515,38 +513,34 @@ namespace cpp_streams
             });
           });
       };
-  }
+  };
 
   // --------------------------------------------------------------------------
 
-  template<typename TPredicate>
-  CPP_STREAMS__PRELUDE auto map (TPredicate && predicate)
+  auto map = [] (auto && mapper)
   {
     // WORKAROUND: G++ gets confused by decltype (predicate) inside the lambda
     //  when deducing map_value_type
-    using predicate_type = decltype (predicate);
+    using mapper_type = decltype (mapper);
 
     return
-      // WORKAROUND: perfect forwarding would be preferable but clang++ & g++
-      //  complains:
-      //    variable 'predicate' cannot be implicitly captured in a lambda with no capture-default specified
-      //  Specifying a capture-default didn't help
-      [predicate] (auto && source)
+      // WORKAROUND: perfect forwarding preferable
+      [mapper] (auto && source)
       {
         using source_type     = decltype (source);
         using value_type      = detail::get_source_value_type_t<source_type>   ;
-        using map_value_type  = std::result_of_t<predicate_type (value_type)> ;
+        using map_value_type  = std::result_of_t<mapper_type (value_type)> ;
 
         return detail::adapt_source<map_value_type> (
-          [predicate, source = std::forward<source_type> (source)] (auto && sink)
+          [mapper, source = std::forward<source_type> (source)] (auto && sink)
           {
-            source.source_function ([&predicate, &sink] (auto && v)
+            source.source_function ([&mapper, &sink] (auto && v)
             {
               return sink (predicate (std::forward<decltype (v)> (v)));
             });
           });
       };
-  }
+  };
 
   // --------------------------------------------------------------------------
 
@@ -611,7 +605,7 @@ namespace cpp_streams
     return
       [=] (auto && source)
 // WORKAROUND
-//      [iteration = std::forward<iteration_type> (iteration)] (auto && source)
+// [iteration = std::forward<iteration_type> (iteration)] (auto && source)
       {
         source.source_function (
           [&iteration] (auto && v)
@@ -629,9 +623,7 @@ namespace cpp_streams
     using folder_type = decltype (folder);
 
     return
-      [=] (auto && source)
-// WORKAROUND
-//      [initial = std::forward<state_type> (initial), folder = std::forward<folder_type> (folder)] (auto && source)
+      [initial, folder] (auto && source)
       {
         auto state = initial;
 

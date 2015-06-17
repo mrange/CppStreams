@@ -605,6 +605,7 @@ namespace functional_tests
 
   }
 
+  */
   void test__filter ()
   {
     CPP_STREAMS__TEST ();
@@ -715,6 +716,7 @@ namespace functional_tests
 
   }
 
+  /*
   void test__mapi ()
   {
     CPP_STREAMS__TEST ();
@@ -988,16 +990,16 @@ namespace functional_tests
     test__from_repeat         ();
     test__from_singleton      ();
     test__from_empty          ();
-/*
-    test__append              ();
-    test__collect             ();
+
+    //test__append              ();
+    //test__collect             ();
     test__filter              ();
     test__map                 ();
-    test__mapi                ();
-    test__reverse             ();
-    test__skip_while          ();
-    test__take_while          ();
-*/
+    //test__mapi                ();
+    //test__reverse             ();
+    //test__skip_while          ();
+    //test__take_while          ();
+
     test__to_first_or_default ();
     test__to_last_or_default  ();
     test__to_sum              ();
