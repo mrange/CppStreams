@@ -519,12 +519,12 @@ namespace cpp_streams
 
   auto map = [] (auto && mapper)
   {
-    using mapper_type = decltype (mapper);
 
     return
       // WORKAROUND: perfect forwarding preferable
       [mapper] (auto && source)
       {
+        using mapper_type     = decltype (mapper);
         using source_type     = decltype (source);
         using value_type      = detail::get_source_value_type_t<source_type>   ;
         using map_value_type  = std::result_of_t<mapper_type (value_type)> ;
