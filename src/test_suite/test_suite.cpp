@@ -30,17 +30,17 @@ int main()
   std::vector<std::string> strings
   {
     "Hello" ,
-    "There" ,
+    "There!",
   };
 
   auto r =
         from (strings)
-    >>  filter ([] (auto && v) { return !v.empty () })
+    >>  filter ([] (auto && v) { return !v.empty (); })
 //    >>  filter ([] (auto && v) { return v % 2 == 0; })
-//    >>  map ([] (auto && v) { return std::to_string (v); })
+    >>  map ([] (auto && v) { return v.size (); })
 //    >>  to_fold (1, [] (auto && s, auto && v) { return s * v; })
 //    >>  to_vector ()
-    >>  to_last_or_default ()
+    >>  to_first_or_default ()
     ;
 
   std::cout << r << std::endl;
