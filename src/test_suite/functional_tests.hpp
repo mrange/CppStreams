@@ -774,7 +774,8 @@ namespace functional_tests
 
   }
 
-  /*
+// TODO: Fix reverse for VS2015 RC
+#ifndef _MSC_VER
   void test__reverse ()
   {
     CPP_STREAMS__TEST ();
@@ -825,7 +826,7 @@ namespace functional_tests
     }
 
   }
-  */
+#endif
 
   void test__skip_while ()
   {
