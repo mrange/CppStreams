@@ -463,7 +463,6 @@ namespace functional_tests
 
   }
 
-/*
   void test__append ()
   {
     CPP_STREAMS__TEST ();
@@ -519,6 +518,7 @@ namespace functional_tests
 
   }
 
+  /*
   void test__collect ()
   {
     CPP_STREAMS__TEST ();
@@ -991,7 +991,7 @@ namespace functional_tests
     test__from_singleton      ();
     test__from_empty          ();
 
-    //test__append              ();
+    test__append              ();
     //test__collect             ();
     test__filter              ();
     test__map                 ();

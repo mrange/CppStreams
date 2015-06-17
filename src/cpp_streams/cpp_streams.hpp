@@ -163,45 +163,6 @@ namespace cpp_streams
 
     // ------------------------------------------------------------------------
 
-    template<typename TOtherSource>
-    struct append_pipe
-    {
-      TOtherSource  other_source  ;
-
-      CPP_STREAMS__BODY (append_pipe);
-
-      static_assert (is_source_adapter<TOtherSource>::value, "TOtherSource must be a proper cpp_streams source");
-
-      explicit CPP_STREAMS__PRELUDE append_pipe (TOtherSource other_source)
-        : other_source (std::move (other_source))
-      {
-      }
-
-      template<typename TValueType, typename TSource>
-      CPP_STREAMS__PRELUDE auto consume (TSource && source) const
-      {
-        using value_type        = get_source_value_type_t<decltype (source)>;
-        using other_value_type  = get_source_value_type_t<decltype (source)>;
-        static_assert (std::is_convertible<other_value_type, value_type>::value, "TOtherSource values must be convertible into a TSource value");
-
-        return adapt_source<value_type> (
-          [this, other_source = other_source, source = std::forward<TSource> (source)] (auto && sink)
-          {
-            source ([&sink] (auto && v)
-            {
-              return sink (std::forward<decltype (v)> (v));
-            });
-
-            other_source.source_function ([&sink] (auto && v)
-            {
-              return sink (std::forward<decltype (v)> (v));
-            });
-          });
-      }
-    };
-
-    // ------------------------------------------------------------------------
-
     template<typename TPredicate>
     struct collect_pipe
     {
@@ -407,11 +368,38 @@ namespace cpp_streams
   // Pipes
   // --------------------------------------------------------------------------
 
-  template<typename TOtherSource>
-  CPP_STREAMS__PRELUDE auto append (TOtherSource other_source)
+  auto append = [] (auto && other_source)
   {
-    return detail::append_pipe<TOtherSource> (std::move (other_source));
-  }
+    CPP_STREAMS__CHECK_SOURCE(other_source);
+
+    return
+      // WORKAROUND: perfect forwarding preferable
+      [other_source] (auto && source)
+      {
+        CPP_STREAMS__CHECK_SOURCE(source);
+
+        using source_type       = decltype (source);
+        using other_source_type = decltype (other_source);
+        using value_type        = detail::get_source_value_type_t<source_type>;
+        using other_value_type  = detail::get_source_value_type_t<other_source_type>;
+
+        static_assert (std::is_convertible<other_value_type, value_type>::value, "TOtherSource values must be convertible into a TSource value");
+
+        return detail::adapt_source<value_type> (
+          [other_source = other_source, source = std::forward<source_type> (source)] (auto && sink)
+          {
+            source.source_function ([&sink] (auto && v)
+            {
+              return sink (std::forward<decltype (v)> (v));
+            });
+
+            other_source.source_function ([&sink] (auto && v)
+            {
+              return sink (std::forward<decltype (v)> (v));
+            });
+          });
+      };
+  };
 
   // --------------------------------------------------------------------------
 
