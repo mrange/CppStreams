@@ -211,50 +211,6 @@ namespace cpp_streams
     // ------------------------------------------------------------------------
 
     template<typename TPredicate>
-    struct skip_while_pipe
-    {
-      TPredicate predicate;
-
-      CPP_STREAMS__BODY (skip_while_pipe);
-
-      explicit CPP_STREAMS__PRELUDE skip_while_pipe (TPredicate predicate)
-        : predicate (std::move (predicate))
-      {
-      }
-
-      template<typename TValueType, typename TSource>
-      CPP_STREAMS__PRELUDE auto consume (TSource && source) const
-      {
-        using value_type = strip_type_t<TValueType>;
-
-        return adapt_source<value_type> (
-          [this, predicate = predicate, source = std::forward<TSource> (source)] (auto && sink)
-          {
-            auto do_skip = true;
-
-            source ([&do_skip, &predicate, &sink] (auto && v)
-            {
-              if (!do_skip)
-              {
-                return sink (std::forward<decltype (v)> (v));
-              }
-              if (predicate (v))
-              {
-                return true;
-              }
-              else
-              {
-                do_skip = false;
-                return sink (std::forward<decltype (v)> (v));
-              }
-            });
-          });
-      }
-    };
-
-    // ------------------------------------------------------------------------
-
-    template<typename TPredicate>
     struct take_while_pipe
     {
       TPredicate predicate;
@@ -378,9 +334,9 @@ namespace cpp_streams
       {
         CPP_STREAMS__CHECK_SOURCE(source);
 
-        using source_type       = decltype (source);
-        using other_source_type = decltype (other_source);
-        using value_type        = detail::get_source_value_type_t<source_type>;
+        using source_type       = decltype (source)                                 ;
+        using other_source_type = decltype (other_source)                           ;
+        using value_type        = detail::get_source_value_type_t<source_type>      ;
         using other_value_type  = detail::get_source_value_type_t<other_source_type>;
 
         static_assert (std::is_convertible<other_value_type, value_type>::value, "TOtherSource values must be convertible into a TSource value");
@@ -421,7 +377,7 @@ namespace cpp_streams
       {
         CPP_STREAMS__CHECK_SOURCE(source);
 
-        using source_type = decltype (source);
+        using source_type = decltype (source)                           ;
         using value_type  = detail::get_source_value_type_t<source_type>;
 
         return detail::adapt_source<value_type> (
@@ -459,11 +415,11 @@ namespace cpp_streams
 
 #ifdef _MSC_VER
         // WORKAROUND: VS2015 RC ICE:s if mapper_type is put in outer scope
-        using mapper_type     = decltype (mapper);
+        using mapper_type     = decltype (mapper)                           ;
 #endif
-        using source_type     = decltype (source);
-        using value_type      = detail::get_source_value_type_t<source_type>   ;
-        using map_value_type  = std::result_of_t<mapper_type (value_type)> ;
+        using source_type     = decltype (source)                           ;
+        using value_type      = detail::get_source_value_type_t<source_type>;
+        using map_value_type  = std::result_of_t<mapper_type (value_type)>  ;
 
         return detail::adapt_source<map_value_type> (
           [mapper, source = std::forward<source_type> (source)] (auto && sink)
@@ -493,10 +449,10 @@ namespace cpp_streams
 
 #ifdef _MSC_VER
         // WORKAROUND: VS2015 RC ICE:s if mapper_type is put in outer scope
-        using mapper_type     = decltype (mapper);
+        using mapper_type     = decltype (mapper)                                       ;
 #endif
-        using source_type     = decltype (source);
-        using value_type      = detail::get_source_value_type_t<source_type>   ;
+        using source_type     = decltype (source)                                       ;
+        using value_type      = detail::get_source_value_type_t<source_type>            ;
         using map_value_type  = std::result_of_t<mapper_type (std::size_t, value_type)> ;
 
         return detail::adapt_source<map_value_type> (
@@ -519,7 +475,7 @@ namespace cpp_streams
     {
       CPP_STREAMS__CHECK_SOURCE(source);
 
-      using source_type = decltype (source);
+      using source_type = decltype (source)                           ;
       using value_type  = detail::get_source_value_type_t<source_type>;
 
       return detail::adapt_source<value_type> (
@@ -542,11 +498,41 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
-  template<typename TPredicate>
-  CPP_STREAMS__PRELUDE auto skip_while (TPredicate predicate)
+  auto skip_while = [] (auto && skipper)
   {
-    return detail::skip_while_pipe<TPredicate> (std::move (predicate));
-  }
+    return
+      // WORKAROUND: perfect forwarding preferable
+      [skipper] (auto && source)
+      {
+        CPP_STREAMS__CHECK_SOURCE(source);
+
+        using source_type = decltype (source)                           ;
+        using value_type  = detail::get_source_value_type_t<source_type>;
+
+        return detail::adapt_source<value_type> (
+          [skipper, source = std::forward<source_type> (source)] (auto && sink)
+          {
+            auto do_skip = true;
+
+            source.source_function ([&do_skip, &skipper, &sink] (auto && v)
+            {
+              if (!do_skip)
+              {
+                return sink (std::forward<decltype (v)> (v));
+              }
+              else if (skipper (v))
+              {
+                return true;
+              }
+              else
+              {
+                do_skip = false;
+                return sink (std::forward<decltype (v)> (v));
+              }
+            });
+          });
+      };
+  };
 
   // --------------------------------------------------------------------------
 

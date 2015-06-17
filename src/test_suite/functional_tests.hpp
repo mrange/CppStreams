@@ -827,6 +827,7 @@ namespace functional_tests
     }
 
   }
+  */
 
   void test__skip_while ()
   {
@@ -876,6 +877,7 @@ namespace functional_tests
 
   }
 
+  /*
   void test__take_while ()
   {
     CPP_STREAMS__TEST ();
@@ -997,7 +999,7 @@ namespace functional_tests
     test__map                 ();
     test__mapi                ();
     //test__reverse             ();
-    //test__skip_while          ();
+    test__skip_while          ();
     //test__take_while          ();
 
     test__to_first_or_default ();
