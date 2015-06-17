@@ -58,6 +58,10 @@ namespace cpp_streams
 
     // ------------------------------------------------------------------------
 
+    constexpr auto default_vector_reserve = 16U;
+
+    // ------------------------------------------------------------------------
+
     template<typename TValueType>
     struct strip_type
     {
@@ -489,14 +493,21 @@ namespace cpp_streams
 
   auto map = [] (auto && mapper)
   {
+#ifndef __MSV_VER
+    // WORKAROUND: G++ gets confused with mapper_type declared inside lambda
+    using mapper_type     = decltype (mapper);
+#endif
+
     return
       // WORKAROUND: perfect forwarding preferable
       [mapper] (auto && source)
       {
         CPP_STREAMS__CHECK_SOURCE(source);
 
+#ifdef __MSV_VER
         // WORKAROUND: VS2015 RC ICE:s if mapper_type is put in outer scope
         using mapper_type     = decltype (mapper);
+#endif
         using source_type     = decltype (source);
         using value_type      = detail::get_source_value_type_t<source_type>   ;
         using map_value_type  = std::result_of_t<mapper_type (value_type)> ;
@@ -521,7 +532,7 @@ namespace cpp_streams
   }
 
   // --------------------------------------------------------------------------
-  auto reverse = 
+  auto reverse =
     [] (auto && source)
     {
       CPP_STREAMS__CHECK_SOURCE(source);
@@ -533,9 +544,9 @@ namespace cpp_streams
         [source = std::forward<source_type> (source)] (auto && sink)
         {
           std::vector<detail::strip_type_t<value_type>> result;
-          result.reserve (16U);
+          result.reserve (detail::default_vector_reserve);
 
-          source ([&result] (auto && v)
+          source.source_function ([&result] (auto && v)
           {
             result.push_back (std::forward<decltype (v)> (v));
             return true;

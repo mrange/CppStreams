@@ -998,7 +998,7 @@ namespace functional_tests
     test__filter              ();
     test__map                 ();
     //test__mapi                ();
-    //test__reverse             ();
+    test__reverse             ();
     //test__skip_while          ();
     //test__take_while          ();
 
