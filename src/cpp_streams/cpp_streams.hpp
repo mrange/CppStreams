@@ -425,10 +425,9 @@ namespace cpp_streams
 
   auto from_array = [] (auto && arr)
   {
-    using array_type = decltype (arr);
+    using array_type = std::remove_reference_t<decltype (arr)>;
 
-    // WORKAROUND
-    // static_assert (std::is_array<array_type>::value, "arr must be a C-Style array");
+    static_assert (std::is_array<array_type>::value, "arr must be a C-Style array");
 
     return from_iterators (arr, arr + std::extent<array_type, 0>::value);
   };
