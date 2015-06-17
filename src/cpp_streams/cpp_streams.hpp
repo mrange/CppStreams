@@ -163,51 +163,6 @@ namespace cpp_streams
 
     // ------------------------------------------------------------------------
 
-    template<typename TPredicate>
-    struct collect_pipe
-    {
-      TPredicate  predicate ;
-
-      template<typename TValue>
-      static TValue get_value ();
-
-      CPP_STREAMS__BODY (collect_pipe);
-
-      explicit CPP_STREAMS__PRELUDE collect_pipe (TPredicate predicate)
-        : predicate (std::move (predicate))
-      {
-      }
-
-      template<typename TValueType, typename TSource>
-      CPP_STREAMS__PRELUDE auto consume (TSource && source) const
-      {
-      }
-    };
-
-    // ------------------------------------------------------------------------
-
-    template<typename TPredicate>
-    struct take_while_pipe
-    {
-      TPredicate predicate;
-
-      CPP_STREAMS__BODY (take_while_pipe);
-
-      explicit CPP_STREAMS__PRELUDE take_while_pipe (TPredicate predicate)
-        : predicate (std::move (predicate))
-      {
-      }
-
-      template<typename TValueType, typename TSource>
-      CPP_STREAMS__PRELUDE auto consume (TSource && source) const
-      {
-        using value_type = strip_type_t<TValueType>;
-
-      }
-    };
-
-    // ------------------------------------------------------------------------
-
   }
 
   // --------------------------------------------------------------------------
@@ -471,13 +426,14 @@ namespace cpp_streams
     {
       CPP_STREAMS__CHECK_SOURCE(source);
 
-      using source_type = decltype (source)                           ;
-      using value_type  = detail::get_source_value_type_t<source_type>;
+      using source_type         = decltype (source)                                     ;
+      using value_type          = detail::get_source_value_type_t<source_type>          ;
+      using stripped_value_type = detail::get_stripped_source_value_type_t<source_type> ;
 
       return detail::adapt_source<value_type> (
         [source = std::forward<source_type> (source)] (auto && sink)
         {
-          std::vector<detail::strip_type_t<value_type>> result;
+          std::vector<stripped_value_type> result;
           result.reserve (detail::default_vector_reserve);
 
           source.source_function ([&result] (auto && v)
