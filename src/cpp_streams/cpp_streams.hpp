@@ -398,36 +398,43 @@ namespace cpp_streams
   // Sources
   // --------------------------------------------------------------------------
 
-  template<typename TIterator>
-  CPP_STREAMS__PRELUDE auto from_iterators (TIterator begin, TIterator end)
+  auto from_iterators = [] (auto && begin, auto && end)
   {
-    using value_type = decltype (*begin);
+    using begin_type  = decltype (begin);
+    using end_type    = decltype (end);
+    using value_type  = decltype (*begin);
 
     return detail::adapt_source<value_type> (
-      [begin = std::move (begin), end = std::move (end)] (auto && sink)
+      [begin = std::forward<begin_type> (begin), end = std::forward<end_type> (end)] (auto && sink)
       {
         for (auto iter = begin; iter != end && sink (*iter); ++iter)
             ;
       });
-  }
+  };
 
   // --------------------------------------------------------------------------
 
-  template<typename TContainer>
-  CPP_STREAMS__PRELUDE auto from (TContainer & container)
+  auto from = [] (auto && container)
   {
+    using container_type = decltype (container);
+
     return from_iterators (container.begin (), container.end ());
-  }
+  };
 
   // --------------------------------------------------------------------------
 
-  template<typename TArray>
-  CPP_STREAMS__PRELUDE auto from_array (TArray & arr)
+  auto from_array = [] (auto && arr)
   {
-    return from_iterators (arr, arr + std::extent<TArray, 0>::value);
-  }
+    using array_type = decltype (arr);
+
+    // WORKAROUND
+    static_assert (std::is_array<array_type>::value, "arr must be a C-Style array");
+    
+    return from_iterators (arr, arr + std::extent<array_type, 0>::value);
+  };
 
   // --------------------------------------------------------------------------
+
 
   template<typename TValue>
   CPP_STREAMS__PRELUDE auto from_empty ()
@@ -440,16 +447,17 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
-  template<typename TValue>
-  CPP_STREAMS__PRELUDE auto from_repeat (TValue value, std::size_t count)
+  auto from_repeat = [] (auto && value, std::size_t count)
   {
-    return detail::adapt_source<TValue> (
-      [count, value = std::move (value)] (auto && sink)
+    using value_type = decltype (value);
+
+    return detail::adapt_source<value_type> (
+      [count, value = std::forward<value_type> (value)] (auto && sink)
       {
         for (auto iter = 0U; iter < count && sink (value); ++iter)
             ;
       });
-  }
+  };
 
   // --------------------------------------------------------------------------
 
