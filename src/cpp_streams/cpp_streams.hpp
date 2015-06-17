@@ -19,7 +19,7 @@
 # define CPP_STREAMS__CHECK_SOURCE(src)               \
   static_assert(                                      \
       detail::is_source_adapter<decltype(src)>::value \
-    , #src " must be a a proper cpp_streams source"   \
+    , #src " must be a a cpp_streams source"          \
     )
 # define CPP_STREAMS__PRELUDE constexpr
 # define CPP_STREAMS__SINK    inline
@@ -181,30 +181,6 @@ namespace cpp_streams
       template<typename TValueType, typename TSource>
       CPP_STREAMS__PRELUDE auto consume (TSource && source) const
       {
-        using inner_source_type = decltype (predicate (get_value<TValueType> ()));
-        using inner_value_type  = get_source_value_type_t<inner_source_type>;
-
-        static_assert (is_source_adapter<inner_source_type>::value, "consume predicate must return a proper cpp_streams source");
-
-        return adapt_source<inner_value_type> (
-          [this, predicate = predicate, source = std::forward<TSource> (source)] (auto && sink)
-          {
-            source ([&predicate, &sink] (auto && v)
-            {
-              auto result = true;
-
-              // Don't use std::forward<decltype (v)> (v) as this might cause v to destroy
-              //  If the inner_source is member field of v we do like v to live on
-              auto inner_source = predicate (v);
-
-              inner_source.source_function ([&result, &sink] (auto && iv)
-              {
-                return result = sink (std::forward<decltype (iv)> (iv));
-              });
-
-              return result;
-            });
-          });
       }
     };
 
@@ -344,11 +320,46 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
-  template<typename TPredicate>
-  CPP_STREAMS__PRELUDE auto collect (TPredicate predicate)
+  auto collect = [] (auto && collector)
   {
-    return detail::collect_pipe<TPredicate> (std::move (predicate));
-  }
+
+    return
+      // WORKAROUND: perfect forwarding preferable
+      [collector] (auto && source)
+      {
+        CPP_STREAMS__CHECK_SOURCE(source);
+
+        using collector_type    = decltype (collector)                              ;
+        using source_type       = decltype (source)                                 ;
+        using value_type        = detail::get_source_value_type_t<source_type>      ;
+        using inner_source_type = std::result_of_t<collector_type (value_type)>     ;
+        using inner_value_type  = detail::get_source_value_type_t<inner_source_type>;
+
+        return detail::adapt_source<inner_value_type> (
+          [collector, source = std::forward<source_type> (source)] (auto && sink)
+          {
+            source.source_function ([&collector, &sink] (auto && v)
+            {
+              auto result = true;
+
+              // Don't use std::forward<decltype (v)> (v) as this might cause v to destroy
+              //  If the inner_source is member field of v we do like v to live on
+              auto inner_source = collector (v);
+
+              CPP_STREAMS__CHECK_SOURCE(inner_source);
+
+              inner_source.source_function ([&result, &sink] (auto && iv)
+              {
+                return result = sink (std::forward<decltype (iv)> (iv));
+              });
+
+              return result;
+            });
+          });
+
+      };
+
+  };
 
   // --------------------------------------------------------------------------
 
