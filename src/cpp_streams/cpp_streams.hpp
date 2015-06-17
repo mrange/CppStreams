@@ -493,7 +493,7 @@ namespace cpp_streams
 
   auto map = [] (auto && mapper)
   {
-#ifndef __MSV_VER
+#ifndef _MSC_VER
     // WORKAROUND: G++ gets confused with mapper_type declared inside lambda
     using mapper_type     = decltype (mapper);
 #endif
@@ -504,7 +504,7 @@ namespace cpp_streams
       {
         CPP_STREAMS__CHECK_SOURCE(source);
 
-#ifdef __MSV_VER
+#ifdef _MSC_VER
         // WORKAROUND: VS2015 RC ICE:s if mapper_type is put in outer scope
         using mapper_type     = decltype (mapper);
 #endif
