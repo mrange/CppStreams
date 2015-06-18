@@ -1045,51 +1045,36 @@ namespace functional_tests
     return std::chrono::duration_cast<std::chrono::milliseconds> (diff);
   }
 
-  auto create_vector (int inner)
-  {
-    std::vector<int> ints;
-    ints.reserve (inner);
-
-    for (auto iter = 0; iter < inner; ++iter)
-    {
-      ints.push_back (iter);
-    }
-
-    return ints;
-  }
-
   void performance__simple_pipe_line (int outer, int inner)
   {
     CPP_STREAMS__TEST ();
 
     using namespace cpp_streams;
 
-    auto ints = create_vector (inner);
-
     {
-      auto cs_func = [] (auto && vs)
+      auto cs_func = [inner] ()
       {
         return
-              from (vs)
+              from_range (0, inner)
           >>  filter ([] (auto && v) {return v % 2 == 0;})
           >>  map ([] (auto && v) {return v + 1;})
           >>  to_sum
           ;
       };
 
-      std::cout << "cs_sum: " << cs_func (ints) << std::endl;
+      std::cout << "cs_sum: " << cs_func () << std::endl;
 
-      auto cs_time = time_it (outer, [&] () { cs_func (ints); });
+      auto cs_time = time_it (outer, [&] () { cs_func (); });
 
       std::cout << "cs_time: " << cs_time.count () << " ms" << std::endl;
     }
 
     {
-      auto classic_func = [] (auto && vs)
+      auto classic_func = [inner] ()
       {
         auto sum = 0;
 
-        for (auto && v : vs)
+        for (auto v = 0; v < inner; ++v)
         {
           if (v % 2 == 0)
           {
@@ -1100,9 +1085,9 @@ namespace functional_tests
         return sum;
       };
 
-      std::cout << "classic_sum: " << classic_func (ints) << std::endl;
+      std::cout << "classic_sum: " << classic_func () << std::endl;
 
-      auto classic_time = time_it (outer, [&] () { classic_func (ints); });
+      auto classic_time = time_it (outer, [&] () { classic_func (); });
 
       std::cout << "classic_time: " << classic_time.count () << " ms" << std::endl;
     }
