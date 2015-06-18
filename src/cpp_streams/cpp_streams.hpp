@@ -706,9 +706,6 @@ namespace cpp_streams
     {
       CPP_STREAMS__CHECK_SOURCE (source);
 
-      using source_type= decltype (source);
-      using value_type = detail::get_stripped_source_value_type_t<source_type>;
-
       std::size_t result = 0;
 
       source.source_function (
@@ -756,6 +753,7 @@ namespace cpp_streams
 
       // WORKAROUND: std::vector<value_type> result {} doesn't work in VS2015 RC
       auto result = std::vector<value_type> ();
+      result.reserve (detail::default_vector_reserve);
 
       source.source_function (
         [&result] (auto && v)
