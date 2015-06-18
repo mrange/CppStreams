@@ -169,19 +169,21 @@ namespace cpp_streams
   // Sources
   // --------------------------------------------------------------------------
 
+#ifndef _MSC_VER
   auto from_range = [] (auto && begin, auto && end)
   {
-    using begin_type  = decltype (begin)  ;
-    using end_type    = decltype (end)    ;
-    using value_type  = decltype (begin)  ;
+    using begin_type  = decltype (begin)      ;
+    using end_type    = decltype (end)        ;
+    using value_type  = decltype (*(&begin))  ;
 
     return detail::adapt_source_function<value_type> (
       [begin = std::forward<begin_type> (begin), end = std::forward<end_type> (end)] (auto && sink)
       {
         for (auto iter = begin; iter != end && sink (iter); ++iter)
-            ;
+          ;
       });
   };
+#endif
 
   // --------------------------------------------------------------------------
 
@@ -197,7 +199,7 @@ namespace cpp_streams
       [begin = std::forward<begin_type> (begin), end = std::forward<end_type> (end)] (auto && sink)
       {
         for (auto iter = begin; iter != end && sink (*iter); ++iter)
-            ;
+          ;
       });
   };
 
@@ -241,7 +243,7 @@ namespace cpp_streams
       [count, value = std::forward<value_type> (value)] (auto && sink)
       {
         for (auto iter = 0U; iter < count && sink (value); ++iter)
-            ;
+          ;
       });
   };
 
@@ -452,7 +454,8 @@ namespace cpp_streams
   };
 
   // --------------------------------------------------------------------------
-  // WORKAROUND: Find VS2015 RC workaround
+
+#ifndef _MSC_VER
   auto reverse =
     [] (auto && source)
     {
@@ -480,6 +483,7 @@ namespace cpp_streams
             ;
         });
     };
+#endif
 
   // --------------------------------------------------------------------------
 
