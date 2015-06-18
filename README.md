@@ -83,10 +83,10 @@ The motivation for CppStreams are:
 |      | Done    | take_while              | Takes while func is true for elements in pipeline  |
 |      | Done    | mapi                    | Maps elements in pipeline using mapi function      |
 |      | Done    | collect                 | Collects sub elements in pipeline                  |
-|    1 | Planned | order_by                | Orders elements in pipeline using order function   |
-|    1 | Planned | then_by                 | Orders elements in pipeline using order function   |
 |    1 | Planned | skip                    | Skips n elements in pipeline                       |
 |    1 | Planned | take                    | Takes n elements in pipeline                       |
+|    1 | Planned | order_by                | Orders elements in pipeline using order function   |
+|    1 | Planned | then_by                 | Orders elements in pipeline using order function   |
 |    2 | Planned | choose                  | Chooses elements in pipeline                       |
 |    2 | Planned | concat                  | Concats a pipeline of pipelines                    |
 |    2 | Planned | distinct_by             | Unique elements in pipeline using select function  |
@@ -113,11 +113,11 @@ The motivation for CppStreams are:
 |      | Done    | to_fold                 | Applies fold function to elements in pipeline      |
 |      | Done    | to_any                  | True if pipeline has any element matching predicate|
 |      | Done    | to_all                  | True if all pipeline element matches predicate     |
-|    1 | Planned | to_length               | Returns length of elements in pipeline             |
-|    1 | Planned | to_map                  | Returns map of elements in pipeline                |
-|    1 | Planned | to_max                  | Returns max of elements in pipeline                |
-|    1 | Planned | to_min                  | Returns min of elements in pipeline                |
-|    1 | Planned | to_set                  | Returns set of elements in pipeline                |
+|      | Done    | to_length               | Returns length of elements in pipeline             |
+|    2 | Planned | to_max                  | Returns max of elements in pipeline                |
+|    2 | Planned | to_min                  | Returns min of elements in pipeline                |
+|    2 | Planned | to_map                  | Returns map of elements in pipeline                |
+|    2 | Planned | to_set                  | Returns set of elements in pipeline                |
 |    2 | Planned | to_average              | Returns average of elements in pipeline            |
 |    2 | Planned | to_first                | Returns the first element of pipeline or empty     |
 |    2 | Planned | to_split_at             | Splits a pipeline at index n                       |

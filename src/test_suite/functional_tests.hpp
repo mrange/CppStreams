@@ -492,6 +492,25 @@ namespace functional_tests
     }
   }
 
+  void test__to_length ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      std::size_t expected  = 0;
+      std::size_t actual    = from (empty_ints) >> to_length;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::size_t expected  = some_users.size ();
+      std::size_t actual    = from (some_users) >> to_length;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+  }
+
   void test__to_sum ()
   {
     CPP_STREAMS__TEST ();
@@ -1181,6 +1200,7 @@ namespace functional_tests
     test__to_any              ();
     test__to_first_or_default ();
     test__to_last_or_default  ();
+    test__to_length           ();
     test__to_sum              ();
     test__to_vector           ();
     test__to_iter             ();

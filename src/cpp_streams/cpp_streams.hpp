@@ -701,6 +701,28 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
+  auto to_length =
+    [] (auto && source)
+    {
+      CPP_STREAMS__CHECK_SOURCE (source);
+
+      using source_type= decltype (source);
+      using value_type = detail::get_stripped_source_value_type_t<source_type>;
+
+      std::size_t result = 0;
+
+      source.source_function (
+        [&result] (auto &&)
+        {
+          ++result;
+          return true;
+        });
+
+      return result;
+    };
+
+  // --------------------------------------------------------------------------
+
   auto to_sum =
     [] (auto && source)
     {
