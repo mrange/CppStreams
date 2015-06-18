@@ -229,6 +229,79 @@ namespace functional_tests
       ;
   }
 
+  void test__from ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      std::vector<int> expected  {};
+      std::vector<int> actual    =
+            from (empty_ints)
+        >>  to_vector
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<int> expected  = some_ints;
+      std::vector<int> actual    =
+            from (some_ints)
+        >>  to_vector
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+  }
+
+  void test__from_range ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      int begin     = 10;
+      int expected  = 0;
+      int actual    =
+            from_range (begin, 0)
+        >>  to_sum
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      int end       = 10;
+      int expected  = 0;
+      int actual    =
+            from_range (end, end)
+        >>  to_sum
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      int expected  = 10*(10 - 1) / 2;
+      int actual    =
+            from_range (0, 10)
+        >>  to_sum
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      int end       = 10;
+      int expected  = 9;
+      int actual    =
+            from_range (8, end)
+        >>  to_last_or_default
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+  }
+
   void test__from_array ()
   {
     CPP_STREAMS__TEST ();
@@ -984,6 +1057,8 @@ namespace functional_tests
       << std::endl
       ;
 
+    test__from                ();
+    test__from_range          ();
     test__from_array          ();
     test__from_repeat         ();
     test__from_singleton      ();

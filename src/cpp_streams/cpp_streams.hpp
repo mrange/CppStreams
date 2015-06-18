@@ -27,7 +27,7 @@
   type (type const &)             = default;\
   type (type &&)                  = default;\
   type& operator= (type const &)  = default;\
-  type& operator= (type &&)       = default;
+  type& operator= (type &&)       = default
 // ----------------------------------------------------------------------------
 # include <type_traits>
 # include <vector>
@@ -169,17 +169,37 @@ namespace cpp_streams
   // Sources
   // --------------------------------------------------------------------------
 
+#ifndef _MSC_VER
+  auto from_range = [] (auto && begin, auto && end)
+  {
+    using begin_type  = decltype (begin)      ;
+    using end_type    = decltype (end)        ;
+    using value_type  = decltype (*(&begin))  ;
+
+    return detail::adapt_source_function<value_type> (
+      [begin = std::forward<begin_type> (begin), end = std::forward<end_type> (end)] (auto && sink)
+      {
+        for (auto iter = begin; iter < end && sink (iter); ++iter)
+          ;
+      });
+  };
+#endif
+
+  // --------------------------------------------------------------------------
+
   auto from_iterators = [] (auto && begin, auto && end)
   {
     using begin_type  = decltype (begin);
     using end_type    = decltype (end);
     using value_type  = decltype (*begin);
 
+    static_assert (std::is_same<begin_type, end_type>::value, "begin and end should be of same type");
+
     return detail::adapt_source_function<value_type> (
       [begin = std::forward<begin_type> (begin), end = std::forward<end_type> (end)] (auto && sink)
       {
         for (auto iter = begin; iter != end && sink (*iter); ++iter)
-            ;
+          ;
       });
   };
 
@@ -187,8 +207,6 @@ namespace cpp_streams
 
   auto from = [] (auto && container)
   {
-    using container_type = decltype (container);
-
     return from_iterators (container.begin (), container.end ());
   };
 
@@ -200,7 +218,8 @@ namespace cpp_streams
 
     static_assert (std::is_array<array_type>::value, "arr must be a C-Style array");
 
-    return from_iterators (arr, arr + std::extent<array_type, 0>::value);
+    // arr + 0 makes the expression a pointer
+    return from_iterators (arr + 0, arr + std::extent<array_type, 0>::value);
   };
 
   // --------------------------------------------------------------------------
@@ -224,7 +243,7 @@ namespace cpp_streams
       [count, value = std::forward<value_type> (value)] (auto && sink)
       {
         for (auto iter = 0U; iter < count && sink (value); ++iter)
-            ;
+          ;
       });
   };
 
@@ -335,7 +354,7 @@ namespace cpp_streams
 
   auto filter = [] (auto && tester)
   {
-    using tester_type = decltype (tester);
+    // using tester_type = decltype (tester);
 
     return
       // WORKAROUND: perfect forwarding preferable
@@ -435,15 +454,17 @@ namespace cpp_streams
   };
 
   // --------------------------------------------------------------------------
-  // WORKAROUND: Find VS2015 RC workaround
+
+#ifndef _MSC_VER
   auto reverse =
     [] (auto && source)
     {
       CPP_STREAMS__CHECK_SOURCE (source);
 
       using source_type         = decltype (source)                                     ;
-      using value_type          = detail::get_source_value_type_t<source_type>          ;
       using stripped_value_type = detail::get_stripped_source_value_type_t<source_type> ;
+      // Added std::add_rvalue_reference_t to allow moving of vector copies
+      using value_type          = std::add_rvalue_reference_t<stripped_value_type>      ;
 
       return detail::adapt_source_function<value_type> (
         [source = std::forward<source_type> (source)] (auto && sink)
@@ -462,11 +483,14 @@ namespace cpp_streams
             ;
         });
     };
+#endif
 
   // --------------------------------------------------------------------------
 
   auto skip_while = [] (auto && skipper)
   {
+    // using skipper_type = decltype ()
+
     return
       // WORKAROUND: perfect forwarding preferable
       [skipper] (auto && source)
@@ -562,7 +586,7 @@ namespace cpp_streams
 
   auto to_iter = [] (auto && iteration)
   {
-    using iteration_type  = decltype (iteration);
+    // using iteration_type  = decltype (iteration);
 
     return
       // WORKAROUND: perfect forwarding preferable
@@ -582,10 +606,11 @@ namespace cpp_streams
 
   auto to_fold = [] (auto && initial, auto && folder)
   {
-    using state_type  = decltype (initial);
-    using folder_type = decltype (folder);
+    // using state_type  = decltype (initial);
+    // using folder_type = decltype (folder);
 
     return
+      // WORKAROUND: perfect forwarding preferable
       [initial, folder] (auto && source)
       {
         CPP_STREAMS__CHECK_SOURCE (source);
