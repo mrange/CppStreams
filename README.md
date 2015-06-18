@@ -111,8 +111,8 @@ The motivation for CppStreams are:
 |      | Done    | to_vector               | Returns vector of elements in pipeline             |
 |      | Done    | to_iter                 | Applies iteration function to elements in pipeline |
 |      | Done    | to_fold                 | Applies fold function to elements in pipeline      |
-|    1 | Planned | to_any                  | True if pipeline has any element matching predicate|
-|    1 | Planned | to_all                  | True if all pipeline element matches predicate     |
+|      | Done    | to_any                  | True if pipeline has any element matching predicate|
+|      | Done    | to_all                  | True if all pipeline element matches predicate     |
 |    1 | Planned | to_length               | Returns length of elements in pipeline             |
 |    1 | Planned | to_map                  | Returns map of elements in pipeline                |
 |    1 | Planned | to_max                  | Returns max of elements in pipeline                |

@@ -205,6 +205,16 @@ namespace functional_tests
     return v.id;
   };
 
+  auto map_true = [] (auto &&)
+  {
+    return true;
+  };
+
+  auto map_false = [] (auto &&)
+  {
+    return false;
+  };
+
   template<typename TContainer, typename TPredicate>
   auto compute_sum (TContainer && container, TPredicate && predicate)
   {
@@ -375,6 +385,70 @@ namespace functional_tests
             from_empty<user> ()
         >>  to_vector
         ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+  }
+
+  void test__to_all ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      bool expected = false;
+      bool actual   = from (empty_users) >> to_all (map_true);
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      bool expected = false;
+      bool actual   = from (some_users) >> to_all (map_false);
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      bool expected = true;
+      bool actual   = from (some_users) >> to_all (map_true);
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      bool expected = true;
+      bool actual   = from (some_ints) >> to_all ([] (auto && v) {return v > 0;});
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+  }
+
+  void test__to_any ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      bool expected = false;
+      bool actual   = from (empty_users) >> to_any (map_true);
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      bool expected = false;
+      bool actual   = from (some_users) >> to_any (map_false);
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      bool expected = true;
+      bool actual   = from (some_users) >> to_any (map_true);
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      bool expected = true;
+      bool actual   = from (some_ints) >> to_any ([] (auto && v) {return v > 8;});
       CPP_STREAMS__EQUAL (expected, actual);
     }
 
@@ -1103,6 +1177,8 @@ namespace functional_tests
     test__skip_while          ();
     test__take_while          ();
 
+    test__to_all              ();
+    test__to_any              ();
     test__to_first_or_default ();
     test__to_last_or_default  ();
     test__to_sum              ();

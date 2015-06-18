@@ -561,6 +561,54 @@ namespace cpp_streams
   // Sinks
   // --------------------------------------------------------------------------
 
+  auto to_all = [] (auto && tester)
+  {
+    // using tester_type  = decltype (tester);
+
+    return
+      // WORKAROUND: perfect forwarding preferable
+      [tester] (auto && source)
+      {
+        CPP_STREAMS__CHECK_SOURCE (source);
+
+        auto result = false;
+
+        source.source_function (
+          [&result, &tester] (auto && v)
+          {
+            return result = tester (std::forward<decltype (v)> (v));
+          });
+
+        return result;
+      };
+  };
+
+  // --------------------------------------------------------------------------
+
+  auto to_any = [] (auto && tester)
+  {
+    // using tester_type  = decltype (tester);
+
+    return
+      // WORKAROUND: perfect forwarding preferable
+      [tester] (auto && source)
+      {
+        CPP_STREAMS__CHECK_SOURCE (source);
+
+        auto result = true;
+
+        source.source_function (
+          [&result, &tester] (auto && v)
+          {
+            return result = !tester (std::forward<decltype (v)> (v));
+          });
+
+        return !result;
+      };
+  };
+
+  // --------------------------------------------------------------------------
+
   auto to_first_or_default =
     [] (auto && source)
     {
@@ -573,9 +621,9 @@ namespace cpp_streams
       auto result = value_type ();
 
       source.source_function (
-        [&] (auto && v)
+        [&result] (auto && v)
         {
-          result = (std::forward<decltype (v)> (v));
+          result = std::forward<decltype (v)> (v);
           return false;
         });
 
@@ -644,7 +692,7 @@ namespace cpp_streams
       source.source_function (
         [&result] (auto && v)
         {
-          result = (std::forward<decltype (v)> (v));
+          result = std::forward<decltype (v)> (v);
           return true;
         });
 
