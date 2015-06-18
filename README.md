@@ -128,8 +128,9 @@ The motivation for CppStreams are:
 
 # TODO
 
-NEXT: 010
+NEXT: 011
 
+1. 010 - VS2015: Find work-around for busted pipes
 1. 006 - performance: Add performance tests
 1. 007 - coverage: Add code coverage tests
 1. 001 - general: Capture by RValue reference as implied here: [capture-by-universal-reference](http://stackoverflow.com/questions/21238463/capture-by-universal-reference)

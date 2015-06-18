@@ -125,15 +125,15 @@ namespace functional_tests
     return static_cast<std::size_t> (n);
   }
 
-  std::size_t       errors_detected = 0;
+  std::size_t             errors_detected = 0;
 
-  std::vector<int>  empty_ints  {};
-  std::vector<int>  some_ints   {3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,};
+  std::vector<int>  const empty_ints  {};
+  std::vector<int>  const some_ints   {3,1,4,1,5,9,2,6,5,3,5,8,9,7,9,};
 
-  user empty_user;
+  user                    empty_user;
 
-  std::vector<user> empty_users {};
-  std::vector<user> some_users
+  std::vector<user> const empty_users {};
+  std::vector<user> const some_users
   {
     {1001, "Bill"   , "Gates" , {1,2,3,4,5,6      }},
     {1002, "Melinda", "Gates" , {1,4,9,16,25,36   }},
@@ -255,6 +255,7 @@ namespace functional_tests
 
   }
 
+// TODO: Fix from_range for VS2015 RC
   void test__from_range ()
   {
 #ifndef _MSC_VER
@@ -689,7 +690,7 @@ namespace functional_tests
 
     auto apply_filter = [] (auto && filter, auto && vs)
     {
-      using value_type = std::remove_reference_t<decltype (vs.front ())>;
+      using value_type = detail::strip_type_t<decltype (vs.front ())>;
       std::vector<value_type> result;
       result.reserve (vs.size ());
       std::copy_if (
@@ -744,7 +745,7 @@ namespace functional_tests
 
     auto apply_map = [] (auto && map, auto && vs)
     {
-      using value_type = std::remove_reference_t<decltype (map (vs.front ()))>;
+      using value_type = detail::strip_type_t<decltype (map (vs.front ()))>;
       std::vector<value_type> result;
       result.reserve (vs.size ());
       std::transform (
@@ -805,7 +806,7 @@ namespace functional_tests
 
     auto apply_mapi = [] (auto && mapi, auto && vs)
     {
-      using value_type = std::remove_reference_t<decltype (mapi (0U, vs.front ()))>;
+      using value_type = detail::strip_type_t<decltype (mapi (0U, vs.front ()))>;
       std::vector<value_type> result;
       result.reserve (vs.size ());
       std::size_t idx = 0;
@@ -858,7 +859,7 @@ namespace functional_tests
 
     auto apply_reverse = [] (auto && vs)
     {
-      using value_type = std::remove_reference_t<decltype (vs.front ())>;
+      using value_type = detail::strip_type_t<decltype (vs.front ())>;
       std::vector<value_type> result;
       result.reserve (vs.size ());
       std::reverse_copy (
@@ -1002,6 +1003,8 @@ namespace functional_tests
   {
     CPP_STREAMS__TEST ();
 
+    // Smoke tests the example on the homepage
+
     using namespace cpp_streams;
 
     std::vector<int> ints {3,1,4,1,5,9,2,6,5,4};
@@ -1017,9 +1020,31 @@ namespace functional_tests
     std::cout << "SUM: " << sum << std::endl;
   }
 
+  void test__mutating_source ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    auto expected =
+          from (some_ints)
+      >>  map ([] (auto && v) {return v % 2 == 0 ? v + 1 : v;})
+      >>  to_vector
+      ;
+    auto actual = some_ints;
+        from (actual)
+    >>  filter ([] (auto && v) {return v % 2 == 0;})
+// TODO: Investigate how to test negative tests case like below
+//    >>  map ([] (auto && v) {return v + 1;})
+    >>  to_iter ([] (auto && v) { v += 1; return true; });
+    CPP_STREAMS__EQUAL (expected, actual);
+  }
+
   void test__basic ()
   {
     CPP_STREAMS__TEST ();
+
+    // Smoke tests a simple query
 
     using namespace cpp_streams;
 
@@ -1036,19 +1061,23 @@ namespace functional_tests
     std::cout << "LAST: " << (query >> to_last_or_default) << std::endl;
   }
 
-  void test__mutating ()
+  void test__complex ()
   {
     CPP_STREAMS__TEST ();
 
+    // Smoke tests a complex query
+
     using namespace cpp_streams;
 
-    auto copy = some_ints;
+    auto query =
+          from (some_users)
+      >>  filter ([] (auto && v) {return v.id != 0;})
+      >>  collect ([] (auto && v) {return from (v.lottery_numbers);})
+      >>  take_while ([] (auto && v) {return v < 10;})
+      >>  map ([] (auto && v) {return std::to_string (v);})
+      >>  to_vector
+      ;
 
-        from (copy)
-    >>  filter ([] (auto && v) {return v % 2 == 0;})
-// TODO: Investigate how to test negative tests case like below
-//    >>  map ([] (auto && v) {return v + 1;})
-    >>  to_iter ([] (auto && v) { v += 1; return true; });
   }
 
   void run_functional_tests ()
@@ -1081,10 +1110,11 @@ namespace functional_tests
     test__to_iter             ();
     test__to_fold             ();
 
+    test__mutating_source     ();
+
     // test__example             ();
     // test__basic               ();
-    // test__mutating            ();
-
+    // test__complex             ();
 
     if (errors_detected > 0)
     {
