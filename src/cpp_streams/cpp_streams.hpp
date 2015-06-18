@@ -487,6 +487,39 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
+  auto skip = [] (std::size_t count)
+  {
+    return
+      [count] (auto && source)
+      {
+        CPP_STREAMS__CHECK_SOURCE (source);
+
+        using source_type = decltype (source)                           ;
+        using value_type  = detail::get_source_value_type_t<source_type>;
+
+        return detail::adapt_source_function<value_type> (
+          [count, source = std::forward<source_type> (source)] (auto && sink)
+          {
+            auto remaining = count;
+
+            source.source_function ([&remaining, &sink] (auto && v)
+            {
+              if (remaining == 0)
+              {
+                return sink (std::forward<decltype (v)> (v));
+              }
+              else
+              {
+                --remaining;
+                return true;
+              }
+            });
+          });
+      };
+  };
+
+  // --------------------------------------------------------------------------
+
   auto skip_while = [] (auto && skipper)
   {
     // using skipper_type = decltype ()
@@ -527,6 +560,38 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
+  auto take = [] (std::size_t count)
+  {
+    return
+      [count] (auto && source)
+      {
+        CPP_STREAMS__CHECK_SOURCE (source);
+
+        using source_type = decltype (source)                           ;
+        using value_type  = detail::get_source_value_type_t<source_type>;
+
+        return detail::adapt_source_function<value_type> (
+          [count, source = std::forward<source_type> (source)] (auto && sink)
+          {
+            auto remaining = count;
+            source.source_function ([&remaining, &sink] (auto && v)
+            {
+              if (remaining > 0)
+              {
+                --remaining;
+                return sink (std::forward<decltype (v)> (v));
+              }
+              else
+              {
+                return false;
+              }
+            });
+          });
+      };
+  };
+
+  // --------------------------------------------------------------------------
+
   auto take_while = [] (auto && taker)
   {
     return
@@ -555,7 +620,6 @@ namespace cpp_streams
           });
       };
   };
-
 
   // --------------------------------------------------------------------------
   // Sinks

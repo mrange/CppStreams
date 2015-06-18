@@ -59,6 +59,8 @@ The motivation for CppStreams are:
 
 ### Source operators
 
+* - Currently doesn't work on VS2015 RC
+
 | Prio | Status  | Source operator         | Comment                                            |
 |-----:| --------|-------------------------|----------------------------------------------------|
 |      | Done    | from                    | Creates a source from a STL container              |
@@ -67,7 +69,7 @@ The motivation for CppStreams are:
 |      | Done    | from_repeat             | Creates an source from a value and repeat count    |
 |      | Done    | from_singleton          | Creates an source from a value                     |
 |      | Done    | from_empty              | Creates an empty source                            |
-|      | Done    | from_range              | Creates a source from a range                      |
+|      | Done    | from_range*             | Creates a source from a range                      |
 |    2 | Planned | from_unfold             | Creates an source from an unfold function          |
 |    2 | Planned | from_generator          | Creates an source from a generator function        |
 
@@ -77,14 +79,14 @@ The motivation for CppStreams are:
 |-----:| --------|-------------------------|----------------------------------------------------|
 |      | Done    | filter                  | Filter elements in pipeline using filter function  |
 |      | Done    | map                     | Maps elements in pipeline using map function       |
-|      | Done    | reverse                 | Reverses elements in pipeline                      |
+|      | Done    | reverse*                | Reverses elements in pipeline                      |
 |      | Done    | append                  | Appends two pipelines                              |
 |      | Done    | skip_while              | Skips while func is true for elements in pipeline  |
 |      | Done    | take_while              | Takes while func is true for elements in pipeline  |
 |      | Done    | mapi                    | Maps elements in pipeline using mapi function      |
 |      | Done    | collect                 | Collects sub elements in pipeline                  |
-|    1 | Planned | skip                    | Skips n elements in pipeline                       |
-|    1 | Planned | take                    | Takes n elements in pipeline                       |
+|      | Done    | skip                    | Skips n elements in pipeline                       |
+|      | Done    | take                    | Takes n elements in pipeline                       |
 |    1 | Planned | order_by                | Orders elements in pipeline using order function   |
 |    1 | Planned | then_by                 | Orders elements in pipeline using order function   |
 |    2 | Planned | choose                  | Chooses elements in pipeline                       |
@@ -114,10 +116,10 @@ The motivation for CppStreams are:
 |      | Done    | to_any                  | True if pipeline has any element matching predicate|
 |      | Done    | to_all                  | True if all pipeline element matches predicate     |
 |      | Done    | to_length               | Returns length of elements in pipeline             |
-|    2 | Planned | to_max                  | Returns max of elements in pipeline                |
-|    2 | Planned | to_min                  | Returns min of elements in pipeline                |
 |    2 | Planned | to_map                  | Returns map of elements in pipeline                |
 |    2 | Planned | to_set                  | Returns set of elements in pipeline                |
+|    2 | Planned | to_max                  | Returns max of elements in pipeline                |
+|    2 | Planned | to_min                  | Returns min of elements in pipeline                |
 |    2 | Planned | to_average              | Returns average of elements in pipeline            |
 |    2 | Planned | to_first                | Returns the first element of pipeline or empty     |
 |    2 | Planned | to_split_at             | Splits a pipeline at index n                       |
