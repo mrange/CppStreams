@@ -67,6 +67,7 @@ The motivation for CppStreams are:
 |      | Done    | from_repeat             | Creates an source from a value and repeat count    |
 |      | Done    | from_singleton          | Creates an source from a value                     |
 |      | Done    | from_empty              | Creates an empty source                            |
+|      | Done    | from_range              | Creates a source from a range                      |
 |    2 | Planned | from_unfold             | Creates an source from an unfold function          |
 |    2 | Planned | from_generator          | Creates an source from a generator function        |
 
