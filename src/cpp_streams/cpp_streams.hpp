@@ -27,7 +27,7 @@
   type (type const &)             = default;\
   type (type &&)                  = default;\
   type& operator= (type const &)  = default;\
-  type& operator= (type &&)       = default;
+  type& operator= (type &&)       = default
 // ----------------------------------------------------------------------------
 # include <type_traits>
 # include <vector>
@@ -205,8 +205,6 @@ namespace cpp_streams
 
   auto from = [] (auto && container)
   {
-    using container_type = decltype (container);
-
     return from_iterators (container.begin (), container.end ());
   };
 
@@ -218,7 +216,7 @@ namespace cpp_streams
 
     static_assert (std::is_array<array_type>::value, "arr must be a C-Style array");
 
-    // arr + 0 makes the expression a pointer 
+    // arr + 0 makes the expression a pointer
     return from_iterators (arr + 0, arr + std::extent<array_type, 0>::value);
   };
 
@@ -354,7 +352,7 @@ namespace cpp_streams
 
   auto filter = [] (auto && tester)
   {
-    using tester_type = decltype (tester);
+    // using tester_type = decltype (tester);
 
     return
       // WORKAROUND: perfect forwarding preferable
@@ -582,7 +580,7 @@ namespace cpp_streams
 
   auto to_iter = [] (auto && iteration)
   {
-    using iteration_type  = decltype (iteration);
+    // using iteration_type  = decltype (iteration);
 
     return
       // WORKAROUND: perfect forwarding preferable
@@ -602,10 +600,11 @@ namespace cpp_streams
 
   auto to_fold = [] (auto && initial, auto && folder)
   {
-    using state_type  = decltype (initial);
-    using folder_type = decltype (folder);
+    // using state_type  = decltype (initial);
+    // using folder_type = decltype (folder);
 
     return
+      // WORKAROUND: perfect forwarding preferable
       [initial, folder] (auto && source)
       {
         CPP_STREAMS__CHECK_SOURCE (source);
