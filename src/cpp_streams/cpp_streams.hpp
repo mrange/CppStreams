@@ -179,7 +179,7 @@ namespace cpp_streams
     return detail::adapt_source_function<value_type> (
       [begin = std::forward<begin_type> (begin), end = std::forward<end_type> (end)] (auto && sink)
       {
-        for (auto iter = begin; iter != end && sink (iter); ++iter)
+        for (auto iter = begin; iter < end && sink (iter); ++iter)
           ;
       });
   };
