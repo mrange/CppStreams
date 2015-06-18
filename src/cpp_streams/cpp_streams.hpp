@@ -485,6 +485,8 @@ namespace cpp_streams
 
   auto skip_while = [] (auto && skipper)
   {
+    // using skipper_type = decltype ()
+
     return
       // WORKAROUND: perfect forwarding preferable
       [skipper] (auto && source)
