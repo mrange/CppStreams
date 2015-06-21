@@ -29,6 +29,7 @@
   type& operator= (type const &)  = default;\
   type& operator= (type &&)       = default
 // ----------------------------------------------------------------------------
+# include <algorithm>
 # include <type_traits>
 # include <vector>
 // ----------------------------------------------------------------------------
@@ -557,6 +558,50 @@ namespace cpp_streams
           });
       };
   };
+
+  // --------------------------------------------------------------------------
+
+  // --------------------------------------------------------------------------
+
+#ifdef _MSC_VER
+  auto sort_by = [] (auto && sorter)
+  {
+    return
+      // WORKAROUND: perfect forwarding preferable
+      [sorter] (auto && source)
+      {
+        CPP_STREAMS__CHECK_SOURCE (source);
+
+        using source_type         = decltype (source)                                     ;
+        using stripped_value_type = detail::get_stripped_source_value_type_t<source_type> ;
+        // Added std::add_rvalue_reference_t to allow moving of vector copies
+        using value_type          = std::add_rvalue_reference_t<stripped_value_type>      ;
+
+        return detail::adapt_source_function<value_type> (
+          [sorter, source = std::forward<source_type> (source)] (auto && sink)
+          {
+            std::vector<stripped_value_type> result;
+            result.reserve (detail::default_vector_reserve);
+
+            source.source_function ([&result] (auto && v)
+            {
+              result.push_back (std::forward<decltype (v)> (v));
+              return true;
+            });
+
+            std::sort (
+                result.begin ()
+              , result.end ()
+              , sorter
+              );
+
+            auto sz = result.size ();
+            for (auto iter = 0U; iter < sz && sink (std::move (result[iter])); ++iter)
+              ;
+          });
+      };
+  };
+#endif
 
   // --------------------------------------------------------------------------
 
