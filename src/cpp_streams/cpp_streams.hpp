@@ -563,8 +563,8 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
-#ifdef _MSC_VER
-  auto sort_by = [] (auto && sorter)
+#ifndef _MSC_VER
+  auto sort = [] (auto && sorter)
   {
     return
       // WORKAROUND: perfect forwarding preferable

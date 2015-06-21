@@ -1093,7 +1093,7 @@ namespace functional_tests
   }
 
 // TODO: Fix reverse for VS2015 RC
-  void test__sort_by ()
+  void test__sort ()
   {
 #ifndef _MSC_VER
     CPP_STREAMS__TEST ();
@@ -1112,24 +1112,24 @@ namespace functional_tests
       return result;
     };
 
-    auto sorter_int   = identity;
-    auto sorter_user  = map_id  ;
+    auto sorter_int   = [] (auto && l, auto && r) { return l < r; };
+    auto sorter_user  = [] (user const & l, user const & r) { return l.id < r.id; };
 
     {
       std::vector<int> expected {};
       std::vector<int> actual   =
             from (empty_ints)
-        >>  sort_by (sorter_int)
+        >>  sort (sorter_int)
         >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
 
     {
-      std::vector<int> expected = apply_sort (sorter_int some_ints);
+      std::vector<int> expected = apply_sort (sorter_int, some_ints);
       std::vector<int> actual   =
             from (some_ints)
-        >>  sort_by (sorter_int)
+        >>  sort (sorter_int)
         >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
@@ -1139,7 +1139,7 @@ namespace functional_tests
       std::vector<user> expected = apply_sort (sorter_user, some_users);
       std::vector<user> actual   =
             from (some_users)
-        >>  sort_by (sorter_user)
+        >>  sort (sorter_user)
         >>  to_vector
         ;
       CPP_STREAMS__EQUAL (expected, actual);
@@ -1347,6 +1347,7 @@ namespace functional_tests
     test__reverse             ();
     test__skip                ();
     test__skip_while          ();
+    test__sort                ();
     test__take                ();
     test__take_while          ();
 
