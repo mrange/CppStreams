@@ -87,6 +87,8 @@ The motivation for CppStreams are:
 |      | Done    | collect                 | Collects sub elements in pipeline                  |
 |      | Done    | skip                    | Skips n elements in pipeline                       |
 |      | Done    | take                    | Takes n elements in pipeline                       |
+|      | Done    | sort                    | Orders elements in pipeline using order function   |
+|      | Done    | sort_by                 | Orders elements in pipeline using order function   |
 |    1 | Planned | order_by                | Orders elements in pipeline using order function   |
 |    1 | Planned | then_by                 | Orders elements in pipeline using order function   |
 |    2 | Planned | choose                  | Chooses elements in pipeline                       |

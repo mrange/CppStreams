@@ -1092,6 +1092,122 @@ namespace functional_tests
 
   }
 
+// TODO: Fix reverse for VS2015 RC
+  void test__sort ()
+  {
+#ifndef _MSC_VER
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    auto apply_sort = [] (auto && sorter, auto && vs)
+    {
+      using value_type = detail::strip_type_t<decltype (vs.front ())>;
+      std::vector<value_type> result = std::forward<decltype (vs)> (vs);
+      std::sort (
+          result.begin ()
+        , result.end ()
+        , sorter
+        );
+      return result;
+    };
+
+    auto sorter_int   = [] (auto && l, auto && r) { return l < r; };
+    auto sorter_user  = [] (user const & l, user const & r) { return l.id < r.id; };
+
+    {
+      std::vector<int> expected {};
+      std::vector<int> actual   =
+            from (empty_ints)
+        >>  sort (sorter_int)
+        >>  to_vector
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<int> expected = apply_sort (sorter_int, some_ints);
+      std::vector<int> actual   =
+            from (some_ints)
+        >>  sort (sorter_int)
+        >>  to_vector
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<user> expected = apply_sort (sorter_user, some_users);
+      std::vector<user> actual   =
+            from (some_users)
+        >>  sort (sorter_user)
+        >>  to_vector
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+#endif
+  }
+
+// TODO: Fix reverse for VS2015 RC
+  void test__sort_by ()
+  {
+#ifndef _MSC_VER
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    auto apply_sort_by = [] (auto && selector, auto && vs)
+    {
+      using value_type = detail::strip_type_t<decltype (vs.front ())>;
+      std::vector<value_type> result = std::forward<decltype (vs)> (vs);
+      auto sorter = [selector] (auto && l, auto && r)
+        {
+          return selector (std::forward<decltype (l)> (l)) < selector (std::forward<decltype (r)> (r));
+        };
+      std::sort (
+          result.begin ()
+        , result.end ()
+        , sorter
+        );
+      return result;
+    };
+
+    auto selector_int   = identity;
+    auto selector_user  = map_id;
+
+    {
+      std::vector<int> expected {};
+      std::vector<int> actual   =
+            from (empty_ints)
+        >>  sort_by (selector_int)
+        >>  to_vector
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<int> expected = apply_sort_by (selector_int, some_ints);
+      std::vector<int> actual   =
+            from (some_ints)
+        >>  sort_by (selector_int)
+        >>  to_vector
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::vector<user> expected = apply_sort_by (selector_user, some_users);
+      std::vector<user> actual   =
+            from (some_users)
+        >>  sort_by (selector_user)
+        >>  to_vector
+        ;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+#endif
+  }
+
   void test__take ()
   {
     CPP_STREAMS__TEST ();
@@ -1291,6 +1407,8 @@ namespace functional_tests
     test__reverse             ();
     test__skip                ();
     test__skip_while          ();
+    test__sort                ();
+    test__sort_by             ();
     test__take                ();
     test__take_while          ();
 
