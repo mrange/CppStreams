@@ -561,8 +561,6 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
-  // --------------------------------------------------------------------------
-
 #ifndef _MSC_VER
   auto sort = [] (auto && sorter)
   {
@@ -600,6 +598,17 @@ namespace cpp_streams
               ;
           });
       };
+  };
+
+  // --------------------------------------------------------------------------
+
+  auto sort_by = [] (auto && selector)
+  {
+    return
+      sort ([selector] (auto && l, auto && r)
+        {
+          return selector (std::forward<decltype (l)> (l)) < selector (std::forward<decltype (r)> (r));
+        });
   };
 #endif
 
