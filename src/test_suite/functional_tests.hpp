@@ -567,8 +567,10 @@ namespace functional_tests
     }
   }
 
+// TODO: Fix to_map for VS2015 RC
   void test__to_map ()
   {
+#ifndef _MSC_VER
     CPP_STREAMS__TEST ();
 
     using namespace cpp_streams;
@@ -608,6 +610,69 @@ namespace functional_tests
     {
       std::map<std::uint64_t, user> expected= apply_map (map_id, some_users);
       std::map<std::uint64_t, user> actual  = from (some_users) >> to_map (map_id);
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+#endif
+  }
+
+  void test__to_max ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      int expected  = -1;
+      int actual    = from (empty_ints) >> to_max (-1);
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::uint64_t expected  = 1003;
+      std::uint64_t actual    = from (some_users) >> map (map_id) >> to_max (0U);
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      int expected  = 9;
+      int actual    = from (some_ints) >> to_max (0);
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      int expected  = 10;
+      int actual    = from (some_ints) >> to_max (10);
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+  }
+
+  void test__to_min ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    {
+      int expected  = 100;
+      int actual    = from (empty_ints) >> to_min (100);
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::uint64_t expected  = 1001;
+      std::uint64_t actual    = from (some_users) >> map (map_id) >> to_min (10000U);
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      int expected  = 1;
+      int actual    = from (some_ints) >> to_min (100);
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      int expected  = 0;
+      int actual    = from (some_ints) >> to_min (0);
       CPP_STREAMS__EQUAL (expected, actual);
     }
   }
@@ -1232,7 +1297,7 @@ namespace functional_tests
 
   }
 
-// TODO: Fix reverse for VS2015 RC
+// TODO: Fix sort for VS2015 RC
   void test__sort ()
   {
 #ifndef _MSC_VER
@@ -1288,7 +1353,7 @@ namespace functional_tests
 #endif
   }
 
-// TODO: Fix reverse for VS2015 RC
+// TODO: Fix sort_by for VS2015 RC
   void test__sort_by ()
   {
 #ifndef _MSC_VER
@@ -1558,6 +1623,8 @@ namespace functional_tests
     test__to_last_or_default  ();
     test__to_length           ();
     test__to_map              ();
+    test__to_max              ();
+    test__to_min              ();
     test__to_set              ();
     test__to_sum              ();
     test__to_vector           ();
