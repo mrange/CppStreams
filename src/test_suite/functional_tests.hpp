@@ -131,6 +131,33 @@ namespace functional_tests
     return s;
   }
 
+  template<typename TKeyType, typename TValueType>
+  std::ostream & operator << (std::ostream & s, std::map<TKeyType, TValueType> const & vs)
+  {
+    s
+      << "{("
+      << vs.size ()
+      << ")"
+      ;
+
+      for (auto && v : vs )
+      {
+        s
+          << ", {"
+          << v.first
+          << ", "
+          << v.second
+          << "}"
+          ;
+      }
+
+    s
+      << "}"
+      ;
+
+    return s;
+  }
+
   std::ostream & operator << (std::ostream & s, user const & v)
   {
     s
@@ -540,6 +567,51 @@ namespace functional_tests
     }
   }
 
+  void test__to_map ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    auto apply_map = [] (auto && key_selector, auto && vs)
+    {
+      using value_type        = detail::strip_type_t<decltype (vs.front ())>      ;
+      using key_selector_type = decltype (key_selector)                           ;
+      using selected_key_type = std::result_of_t<key_selector_type (value_type)>  ;
+      using key_type          = detail::strip_type_t<selected_key_type>           ;
+      using map_type          = std::map<key_type, value_type>                    ;
+      using item_type         = typename map_type::value_type                     ;
+      map_type result;
+
+      for (auto && v : vs)
+      {
+        auto key = key_selector (v);
+        result.insert (item_type (std::move (key), std::forward<decltype (v)> (v)));
+      }
+
+      return result;
+    };
+
+
+    {
+      std::map<int, int> expected           = apply_map (identity, empty_ints);
+      std::map<int, int> actual             = from (empty_ints) >> to_map (identity);
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::map<int, int> expected           = apply_map (identity, some_ints);
+      std::map<int, int> actual             = from (some_ints) >> to_map (identity);
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::map<std::uint64_t, user> expected= apply_map (map_id, some_users);
+      std::map<std::uint64_t, user> actual  = from (some_users) >> to_map (map_id);
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+  }
+
   void test__to_set ()
   {
     CPP_STREAMS__TEST ();
@@ -563,6 +635,12 @@ namespace functional_tests
     {
       std::set<int> expected  = apply_set (empty_ints);
       std::set<int> actual    = from (empty_ints) >> to_set;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::set<int> expected  = apply_set (some_ints);
+      std::set<int> actual    = from (some_ints) >> to_set;
       CPP_STREAMS__EQUAL (expected, actual);
     }
 
@@ -1479,6 +1557,7 @@ namespace functional_tests
     test__to_first_or_default ();
     test__to_last_or_default  ();
     test__to_length           ();
+    test__to_map              ();
     test__to_set              ();
     test__to_sum              ();
     test__to_vector           ();
