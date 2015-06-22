@@ -842,30 +842,35 @@ namespace cpp_streams
 
   auto to_map = [] (auto && key_selector)
   {
-    [] (auto && source)
-    {
-      CPP_STREAMS__CHECK_SOURCE (source);
+    using key_selector_type  = decltype (key_selector)                              ;
 
-      using key_selector_type  = decltype (key_selector)                              ;
+    return
+      // WORKAROUND: perfect forwarding preferable
+      [key_selector] (auto && source)
+      {
+        CPP_STREAMS__CHECK_SOURCE (source);
 
-      using source_type       = decltype (source)                                     ;
-      using value_type        = detail::get_stripped_source_value_type_t<source_type> ;
-      using selected_key_type = std::result_of_t<key_selector_type (value_type)>      ;
-      using key_type          = detail::strip_type_t<selected_key_type>               ;
 
-      // WORKAROUND: std::set<value_type> result; doesn't work in VS2015 RC
-      auto result = map_type ();
+        using source_type       = decltype (source)                                     ;
+        using value_type        = detail::get_stripped_source_value_type_t<source_type> ;
+        using selected_key_type = std::result_of_t<key_selector_type (value_type)>      ;
+        using key_type          = detail::strip_type_t<selected_key_type>               ;
+        using map_type          = std::map<key_type, value_type>                        ;
+        using item_type         = typename map_type::value_type                         ;
 
-      source.source_function (
-        [&result] (auto && v)
-        {
-          auto key = key_selector (v);
-          result.insert_or_assign (std::move (key), std::forward<decltype (v)> (v));
-          return true;
-        });
+        // WORKAROUND: std::set<value_type> result; doesn't work in VS2015 RC
+        auto result = map_type ();
 
-      return result;
-    };
+        source.source_function (
+          [&key_selector, &result] (auto && v)
+          {
+            auto key = key_selector (v);
+            result.insert (item_type (std::move (key), std::forward<decltype (v)> (v)));
+            return true;
+          });
+
+        return result;
+      };
   };
 
   // --------------------------------------------------------------------------
