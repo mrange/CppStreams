@@ -30,6 +30,7 @@
   type& operator= (type &&)       = default
 // ----------------------------------------------------------------------------
 # include <algorithm>
+# include <map>
 # include <type_traits>
 # include <set>
 # include <vector>
@@ -839,6 +840,36 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
+  auto to_map = [] (auto && key_selector)
+  {
+    [] (auto && source)
+    {
+      CPP_STREAMS__CHECK_SOURCE (source);
+
+      using key_selector_type  = decltype (key_selector)                              ;
+
+      using source_type       = decltype (source)                                     ;
+      using value_type        = detail::get_stripped_source_value_type_t<source_type> ;
+      using selected_key_type = std::result_of_t<key_selector_type (value_type)>      ;
+      using key_type          = detail::strip_type_t<selected_key_type>               ;
+
+      // WORKAROUND: std::set<value_type> result; doesn't work in VS2015 RC
+      auto result = map_type ();
+
+      source.source_function (
+        [&result] (auto && v)
+        {
+          auto key = key_selector (v);
+          result.insert_or_assign (std::move (key), std::forward<decltype (v)> (v));
+          return true;
+        });
+
+      return result;
+    };
+  };
+
+  // --------------------------------------------------------------------------
+
   auto to_set =
     [] (auto && source)
     {
@@ -847,7 +878,7 @@ namespace cpp_streams
       using source_type= decltype (source);
       using value_type = detail::get_stripped_source_value_type_t<source_type>;
 
-      // WORKAROUND: std::vector<value_type> result {} doesn't work in VS2015 RC
+      // WORKAROUND: std::set<value_type> result; doesn't work in VS2015 RC
       auto result = std::set<value_type> ();
 
       source.source_function (
