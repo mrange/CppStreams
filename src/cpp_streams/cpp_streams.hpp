@@ -840,6 +840,7 @@ namespace cpp_streams
 
   // --------------------------------------------------------------------------
 
+#ifndef _MSC_VER
   auto to_map = [] (auto && key_selector)
   {
     using key_selector_type  = decltype (key_selector)                              ;
@@ -866,6 +867,69 @@ namespace cpp_streams
           {
             auto key = key_selector (v);
             result.insert (item_type (std::move (key), std::forward<decltype (v)> (v)));
+            return true;
+          });
+
+        return result;
+      };
+  };
+#endif
+
+  // --------------------------------------------------------------------------
+
+  auto to_max = [] (auto && initial)
+  {
+    return
+      // WORKAROUND: perfect forwarding preferable
+      [initial] (auto && source)
+      {
+        CPP_STREAMS__CHECK_SOURCE (source);
+
+        using source_type= decltype (source);
+        using value_type = detail::get_stripped_source_value_type_t<source_type>;
+
+        // WORKAROUND: value_type result = initial doesn't work in VS2015 RC
+        auto result = value_type (initial);
+
+        source.source_function (
+          [&result] (auto && v)
+          {
+            // WORKAROUND: std::max produced warnings in VS2015 RC
+            if (result < v)
+            {
+              result = std::forward<decltype (v)> (v);
+            }
+            return true;
+          });
+
+        return result;
+      };
+  };
+
+  // --------------------------------------------------------------------------
+
+  auto to_min = [] (auto && initial)
+  {
+    return
+      // WORKAROUND: perfect forwarding preferable
+      [initial] (auto && source)
+      {
+        CPP_STREAMS__CHECK_SOURCE (source);
+
+        using source_type= decltype (source);
+        using value_type = detail::get_stripped_source_value_type_t<source_type>;
+
+        // WORKAROUND: value_type result = initial doesn't work in VS2015 RC
+        auto result = value_type (initial);
+
+        source.source_function (
+          [&result] (auto && v)
+          {
+            // WORKAROUND: std::min produced warnings in VS2015 RC
+            if (v < result)
+            {
+              result = std::forward<decltype (v)> (v);
+            }
             return true;
           });
 
