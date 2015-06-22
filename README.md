@@ -119,10 +119,10 @@ The motivation for CppStreams are:
 |      | Done    | to_all                  | True if all pipeline element matches predicate     |
 |      | Done    | to_length               | Returns length of elements in pipeline             |
 |      | Done    | to_set                  | Returns set of elements in pipeline                |
-|    2 | Planned | to_map                  | Returns map of elements in pipeline                |
+|      | Done    | to_map*                 | Returns map of elements in pipeline                |
 |    2 | Planned | to_max                  | Returns max of elements in pipeline                |
 |    2 | Planned | to_min                  | Returns min of elements in pipeline                |
-|    2 | Planned | to_average              | Returns average of elements in pipeline            |
+|    3 | Planned | to_average              | Returns average of elements in pipeline            |
 |    3 | Planned | to_first                | Returns the first element of pipeline or empty     |
 |    3 | Planned | to_split_at             | Splits a pipeline at index n                       |
 |    3 | Planend | to_last                 | Returns the last element of pipeline or empty      |
