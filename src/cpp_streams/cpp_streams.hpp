@@ -894,7 +894,11 @@ namespace cpp_streams
         source.source_function (
           [&result] (auto && v)
           {
-            result = std::max<value_type> (std::move (result), std::forward<decltype (v)> (v));
+            // WORKAROUND: std::max produced warnings in VS2015 RC
+            if (result < v)
+            {
+              result = std::forward<decltype (v)> (v);
+            }
             return true;
           });
 
@@ -921,7 +925,11 @@ namespace cpp_streams
         source.source_function (
           [&result] (auto && v)
           {
-            result = std::min<value_type> (std::move (result), std::forward<decltype (v)> (v));
+            // WORKAROUND: std::min produced warnings in VS2015 RC
+            if (v < result)
+            {
+              result = std::forward<decltype (v)> (v);
+            }
             return true;
           });
 
