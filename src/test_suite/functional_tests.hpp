@@ -62,6 +62,11 @@ namespace functional_tests
     std::string       first_name      ;
     std::string       last_name       ;
     std::vector<int>  lottery_numbers ;
+
+    bool operator < (user const & o) const
+    {
+      return id < o.id;
+    }
   };
 
   template<typename TOne, typename TTwo>
@@ -97,6 +102,30 @@ namespace functional_tests
 
     s
       << "]"
+      ;
+
+    return s;
+  }
+
+  template<typename TValueType>
+  std::ostream & operator << (std::ostream & s, std::set<TValueType> const & vs)
+  {
+    s
+      << "{("
+      << vs.size ()
+      << ")"
+      ;
+
+      for (auto && v : vs )
+      {
+        s
+          << ", "
+          << v
+          ;
+      }
+
+    s
+      << "}"
       ;
 
     return s;
@@ -507,6 +536,39 @@ namespace functional_tests
     {
       std::size_t expected  = some_users.size ();
       std::size_t actual    = from (some_users) >> to_length;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+  }
+
+  void test__to_set ()
+  {
+    CPP_STREAMS__TEST ();
+
+    using namespace cpp_streams;
+
+    auto apply_set = [] (auto && vs)
+    {
+      using value_type = detail::strip_type_t<decltype (vs.front ())>;
+      std::set<value_type> result;
+
+      for (auto && v : vs)
+      {
+        result.insert (std::forward<decltype (v)> (v));
+      }
+
+      return result;
+    };
+
+
+    {
+      std::set<int> expected  = apply_set (empty_ints);
+      std::set<int> actual    = from (empty_ints) >> to_set;
+      CPP_STREAMS__EQUAL (expected, actual);
+    }
+
+    {
+      std::set<user> expected = apply_set (some_users);
+      std::set<user> actual   = from (some_users) >> to_set;
       CPP_STREAMS__EQUAL (expected, actual);
     }
   }
@@ -1417,6 +1479,7 @@ namespace functional_tests
     test__to_first_or_default ();
     test__to_last_or_default  ();
     test__to_length           ();
+    test__to_set              ();
     test__to_sum              ();
     test__to_vector           ();
     test__to_iter             ();

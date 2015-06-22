@@ -19,7 +19,9 @@
 int main()
 {
   functional_tests::run_functional_tests ();
+#ifdef NDEBUG
   functional_tests::run_performance_tests ();
+#endif
 
   return 0;
 }

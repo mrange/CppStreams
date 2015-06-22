@@ -31,6 +31,7 @@
 // ----------------------------------------------------------------------------
 # include <algorithm>
 # include <type_traits>
+# include <set>
 # include <vector>
 // ----------------------------------------------------------------------------
 // Three kind of objects
@@ -830,6 +831,29 @@ namespace cpp_streams
         [&result] (auto &&)
         {
           ++result;
+          return true;
+        });
+
+      return result;
+    };
+
+  // --------------------------------------------------------------------------
+
+  auto to_set =
+    [] (auto && source)
+    {
+      CPP_STREAMS__CHECK_SOURCE (source);
+
+      using source_type= decltype (source);
+      using value_type = detail::get_stripped_source_value_type_t<source_type>;
+
+      // WORKAROUND: std::vector<value_type> result {} doesn't work in VS2015 RC
+      auto result = std::set<value_type> ();
+
+      source.source_function (
+        [&result] (auto && v)
+        {
+          result.insert (std::forward<decltype (v)> (v));
           return true;
         });
 
