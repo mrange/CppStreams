@@ -321,10 +321,8 @@ namespace functional_tests
 
   }
 
-// TODO: Fix from_range for VS2015 RC
   void test__from_range ()
   {
-#ifndef _MSC_VER
     CPP_STREAMS__TEST ();
 
     using namespace cpp_streams;
@@ -367,7 +365,6 @@ namespace functional_tests
         ;
       CPP_STREAMS__EQUAL (expected, actual);
     }
-#endif
   }
 
   void test__from_array ()

@@ -172,7 +172,6 @@ namespace cpp_streams
   // Sources
   // --------------------------------------------------------------------------
 
-#ifndef _MSC_VER
   auto from_range = [] (auto && begin, auto && end)
   {
     using begin_type  = decltype (begin)      ;
@@ -186,7 +185,6 @@ namespace cpp_streams
           ;
       });
   };
-#endif
 
   // --------------------------------------------------------------------------
 
